@@ -1,0 +1,20 @@
+[
+    {
+        "numero": 1,
+        "titulo": "Bulbasaur",
+        "contenido": "Pokemon tipo planta verdecito",
+        "imagen": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/1.png"
+    },
+    {
+        "numero": 2,
+        "titulo": "Ivysaur",
+        "contenido": "Pokemon que abre su plantita al sol",
+        "imagen": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/2.png"
+    },
+    {
+        "numero": 3,
+        "titulo": "Venusaur",
+        "contenido": "Mega planta super grande",
+        "imagen": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/3.png"
+    }
+]
