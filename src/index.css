@@ -1,0 +1,59 @@
+/* 1. Usamos '*' (selector universal) para forzar los colores y la fuente
+   en TODOS los elementos, dándoles más importancia que al default de Bootstrap.
+*/
+* {
+  color: #5D4037; /* Texto Principal: Marrón Oscuro */
+  font-family: 'Lato', sans-serif !important; /* Fuente Principal (forzada) */
+}
+
+body {
+  background-color: #FFF5E1; /* Crema Pastel */
+}
+
+/* 2. Definimos los colores de los títulos y la barra de navegación */
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+  font-family: 'Pacifico', cursive !important; /* Fuente de Encabezado (forzada) */
+  color: #5D4037; /* Marrón Oscuro */
+}
+
+/* 3. Definimos una clase para el Texto Secundario (Gris Claro) */
+.text-secundario {
+  color: #B0BEC5 !important;
+}
+
+/* --- Colores de Botones (como antes) --- */
+.btn-primary {
+  background-color: #FFC0CB; /* Rosa Suave */
+  border-color: #FFC0CB;
+  color: #5D4037; /* Texto oscuro para que contraste */
+}
+
+.btn-secondary {
+  background-color: #8B4000; /* Chocolate (un poco más oscuro) */
+  border-color: #8B4000;
+  /* El color del texto (blanco) lo define Bootstrap por defecto */
+}
+
+.btn-success {
+  background-color: #FFC0CB;
+  border-color: #FFC0CB;
+  color: #5D4037;
+}
+
+.btn-danger {
+  background-color: #8B4000;
+  border-color: #8B4000;
+}
+
+.btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-danger:hover {
+  opacity: 0.8;
+}
+
+/* Ajuste para que los links de la Navbar (blancos) no se pongan marrones */
+.navbar-nav .nav-link, .navbar-brand, .navbar-text {
+  color: white !important;
+}
+.navbar-nav .nav-link:hover {
+  color: #FFC0CB !important; /* Rosa al pasar el mouse */
+}
+
