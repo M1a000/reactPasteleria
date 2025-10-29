@@ -1,46 +1,76 @@
-import { Link } from 'react-router-dom';
-import { Button } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
+// 1. Importamos Link y useLocation
+import { Link, useLocation } from 'react-router-dom';
+import { Container, Button, Alert } from 'react-bootstrap';
 
 export default function Home() {
+  // 2. Usamos useLocation para acceder al 'state' que nos pasó el NavBar
+  const location = useLocation();
+  
+  // 3. Creamos un estado local para el mensaje
+  const [mensaje, setMensaje] = useState(null);
+
+  // 4. Usamos useEffect para leer el mensaje cuando la página carga
+  useEffect(() => {
+    // Si location.state tiene un mensaje, lo ponemos en nuestro estado local
+    if (location.state?.mensaje) {
+      setMensaje(location.state.mensaje);
+      
+      // Opcional: Limpiamos el mensaje después de 5 segundos
+      const timer = setTimeout(() => {
+        setMensaje(null);
+      }, 5000); // 5000 milisegundos = 5 segundos
+
+      // Limpiamos el temporizador si el componente se desmonta
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]); // Se ejecuta cada vez que 'location.state' cambia
+
   return (
-    <div 
-      className="text-center p-5 rounded-3" 
-      style={{
-        background: 'linear-gradient(rgba(255, 245, 225, 0.8), rgba(255, 245, 225, 0.8)), url("https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1989&auto=format&fit=crop")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-      }}
-    >
-      <h1 
-        className="display-3" 
+    <div>
+      {/* Sección de Bienvenida (Hero) */}
+      <Container 
+        fluid 
+        className="text-center p-5" 
         style={{ 
-          fontFamily: 'Pacifico, cursive', 
-          color: '#8B4513' // Color Chocolate
+          backgroundColor: '#FFF5E1', 
+          borderBottom: '2px solid #8B4513'
         }}
       >
-        ¡Bienvenidos a Pastelería Mil Sabores!
-      </h1>
+        <h1 
+          className="display-3" 
+          style={{ fontFamily: 'Pacifico, cursive', color: '#8B4513' }}
+        >
+          ¡Bienvenido a Mil Sabores!
+        </h1>
+        <p className="lead" style={{ color: '#5D4037' }}>
+          Celebrando 50 años de tradición y dulzura.
+        </p>
+        <p style={{ color: '#5D4037' }}>
+          Descubre por qué somos un referente en la repostería chilena.
+        </p>
+        <Button 
+          as={Link} 
+          to="/catalogo" 
+          variant="secondary" 
+          size="lg"
+          className="fw-bold"
+        >
+          Ver Catálogo
+        </Button>
+      </Container>
       
-      <p className="lead" style={{ color: '#5D4037' }}>
-        Celebrando 50 años de tradición y dulzura.
-      </p>
+      {/* 5. Contenedor para mostrar el mensaje de "Cierre de Sesión" */}
+      <Container className="mt-4" style={{ maxWidth: '600px' }}>
+        {mensaje && (
+          <Alert variant="success" onClose={() => setMensaje(null)} dismissible>
+            {mensaje}
+          </Alert>
+        )}
+      </Container>
       
-      <hr className="my-4" />
-      
-      <p style={{ color: '#5D4037' }}>
-        Descubre nuestras tortas, postres y pastelería tradicional hechos con amor.
-      </p>
-      
-      {/* Botón que usa 'Link' de react-router-dom para navegar */}
-      <Button 
-        as={Link} 
-        to="/catalogo" 
-        variant="secondary" 
-        size="lg"
-      >
-        Ver Nuestro Catálogo
-      </Button>
+      {/* (Aquí podrías agregar más contenido al Home, como productos destacados) */}
     </div>
   );
 }
+

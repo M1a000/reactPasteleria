@@ -1,38 +1,52 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
-// 1. Importamos useNavigate para redirigir
-import { useNavigate, Link } from 'react-router-dom';
-// 2. Importamos nuestro contexto de autenticación
+// 1. Importamos useNavigate
+import { useNavigate } from 'react-router-dom';
+// 2. Importamos nuestro contexto
 import { ContextoAutenticacion } from '../context/ContextoAutenticacion';
 
 export default function Login() {
-  // 3. Obtenemos la función 'iniciarSesion' del contexto
-  const { iniciarSesion } = useContext(ContextoAutenticacion);
-  const navigate = useNavigate(); // Hook para redirigir
+  // 3. Obtenemos las funciones y mensajes del contexto
+  const { iniciarSesion, mensaje, limpiarMensaje } = useContext(ContextoAutenticacion);
+  const navigate = useNavigate();
 
   // 4. Estados locales para el formulario
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
-  // Estado para errores
-  const [error, setError] = useState(null);
+  // 5. Estado local para el mensaje de ÉXITO
+  const [exito, setExito] = useState(null);
+
+  // 6. Limpiamos los mensajes de error cuando el componente se carga/desmonta
+  useEffect(() => {
+    // Limpia el mensaje de error del contexto al cargar la página
+    limpiarMensaje();
+    // Limpia el mensaje de error cuando el usuario sale de esta página
+    return () => {
+      limpiarMensaje();
+    };
+  }, [limpiarMensaje]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError(null); // Limpiamos errores previos
+    setExito(null); // Limpiamos mensajes de éxito previos
+    limpiarMensaje(); // Limpiamos mensajes de error previos
 
-    // 5. Llamamos a la función del contexto
-    const exito = iniciarSesion(email, password);
+    // 7. Llamamos a iniciarSesion y comprobamos el resultado
+    const inicioExitoso = iniciarSesion(email, password);
 
-    // 6. Verificamos si el inicio de sesión fue exitoso
-    if (exito) {
-      // 7. Mostramos un aviso y redirigimos al Catálogo
-      alert('¡Inicio de sesión exitoso! Serás redirigido al catálogo.');
-      navigate('/catalogo');
-    } else {
-      // 8. Mostramos un error
-      setError('Email o contraseña incorrectos. Por favor, inténtalo de nuevo.');
-    }
+    if (inicioExitoso) {
+      // 8. Mostramos un mensaje verde de éxito
+      setExito({ tipo: 'success', texto: '¡Inicio de sesión exitoso! Redirigiendo...' });
+      
+      // Redirigimos al catálogo después de 2 segundos
+      setTimeout(() => {
+        navigate('/catalogo');
+      }, 2000);
+
+    } 
+    // Si (inicioExitoso === false), el contexto ya ha establecido el 'mensaje' de error
+    // y se mostrará automáticamente (ver JSX abajo).
   };
 
   return (
@@ -42,19 +56,19 @@ export default function Login() {
           <h2 style={{ fontFamily: 'Pacifico, cursive' }} className="text-center mb-4">
             Iniciar Sesión
           </h2>
-          <p className="text-center text-muted">
-            Ingresa a tu cuenta para ver tus descuentos.
-          </p>
+          
+          {/* 9. Mostramos el mensaje de ÉXITO (local) */}
+          {exito && <Alert variant={exito.tipo}>{exito.texto}</Alert>}
 
-          {/* 9. Mostramos el error si existe */}
-          {error && <Alert variant="danger">{error}</Alert>}
+          {/* 10. Mostramos el mensaje de ERROR (del Contexto) */}
+          {mensaje && <Alert variant="danger">{mensaje}</Alert>}
 
           <Form onSubmit={handleSubmit} className="p-4 bg-light rounded shadow-sm">
             <Form.Group className="mb-3" controlId="formEmail">
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="email"
-                placeholder="tu@email.com"
+                placeholder="Ingresa tu email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -72,14 +86,11 @@ export default function Login() {
               />
             </Form.Group>
 
-            <Button variant="secondary" type="submit" className="w-100 fw-bold">
+            {/* Deshabilitamos el botón si el inicio de sesión fue exitoso */}
+            <Button variant="secondary" type="submit" className="w-100 fw-bold" disabled={exito?.tipo === 'success'}>
               Ingresar
             </Button>
           </Form>
-
-          <div className="text-center mt-3">
-            <p>¿No tienes cuenta? <Link to="/registro">Regístrate aquí</Link></p>
-          </div>
         </Col>
       </Row>
     </Container>

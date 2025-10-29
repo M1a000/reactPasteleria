@@ -1,52 +1,62 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
-// 1. Importamos el useNavigate para redirigir
 import { useNavigate } from 'react-router-dom';
-// 2. Importamos nuestro contexto de autenticación
 import { ContextoAutenticacion } from '../context/ContextoAutenticacion';
 
 export default function Registro() {
-  // 3. Obtenemos la función 'registrarUsuario' del contexto
-  const { registrarUsuario } = useContext(ContextoAutenticacion);
-  const navigate = useNavigate(); // Hook para redirigir
+  const { registrarUsuario, mensaje, limpiarMensaje } = useContext(ContextoAutenticacion);
+  const navigate = useNavigate();
 
-  // 4. Estados locales para el formulario
+  // --- ¡CAMBIO 1: Añadimos estado para el nombre! ---
+  const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [codigoPromo, setCodigoPromo] = useState('');
   
-  // Estados para errores
-  const [error, setError] = useState(null);
+  const [exito, setExito] = useState(null);
+
+  useEffect(() => {
+    limpiarMensaje();
+    return () => {
+      limpiarMensaje();
+    };
+  }, [limpiarMensaje]);
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError(null); // Limpiamos errores previos
+    setExito(null); 
+    limpiarMensaje(); 
 
-    // 5. Validaciones
+    // --- ¡CAMBIO 2: Añadimos validación para el nombre! ---
     if (password !== passwordConfirm) {
-      return setError('Las contraseñas no coinciden.');
+      return setExito({ tipo: 'danger', texto: 'Las contraseñas no coinciden.' });
     }
-    if (!email || !password || !fechaNacimiento) {
-      return setError('Email, contraseña y fecha de nacimiento son obligatorios.');
+    if (!nombre || !email || !password || !fechaNacimiento) {
+      return setExito({ tipo: 'danger', texto: 'Nombre, email, contraseña y fecha de nacimiento son obligatorios.' });
     }
-    // (Podrías añadir más validaciones: formato de email, largo de contraseña, etc.)
 
-    // 6. Creamos el objeto de usuario
+    // --- ¡CAMBIO 3: Añadimos el nombre a los datos del usuario! ---
     const datosUsuario = {
+      nombre,
       email,
-      password, // En un proyecto real, NUNCA guardaríamos la contraseña así
+      password,
       fechaNacimiento,
       codigoPromo
     };
 
-    // 7. Llamamos a la función del contexto
-    registrarUsuario(datosUsuario);
+    const registroExitoso = registrarUsuario(datosUsuario);
 
-    // 8. Mostramos un aviso y redirigimos al Catálogo
-    alert('¡Registro exitoso! Serás redirigido al catálogo.');
-    navigate('/catalogo');
+    if (registroExitoso) {
+      setExito({ tipo: 'success', texto: '¡Registro exitoso! Redirigiendo al catálogo...' });
+      
+      setTimeout(() => {
+        navigate('/catalogo');
+      }, 2000);
+
+    } 
   };
 
   return (
@@ -60,10 +70,23 @@ export default function Registro() {
             Y accede a beneficios exclusivos como descuentos y más.
           </p>
 
-          {/* 9. Mostramos el error si existe */}
-          {error && <Alert variant="danger">{error}</Alert>}
+          {exito && <Alert variant={exito.tipo}>{exito.texto}</Alert>}
+          {mensaje && <Alert variant="danger">{mensaje}</Alert>}
 
           <Form onSubmit={handleSubmit} className="p-4 bg-light rounded shadow-sm">
+            
+            {/* --- ¡CAMBIO 4: Añadimos el campo Nombre al formulario! --- */}
+            <Form.Group className="mb-3" controlId="formNombre">
+              <Form.Label>Nombre</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Ingresa tu nombre"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                required
+              />
+            </Form.Group>
+
             <Form.Group className="mb-3" controlId="formEmail">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -95,7 +118,7 @@ export default function Registro() {
                 onChange={(e) => setPasswordConfirm(e.target.value)}
                 required
               />
-            </Form.Group> {/* <-- ¡AQUÍ ESTABA EL ERROR! */}
+            </Form.Group>
             
             <Form.Group className="mb-3" controlId="formFechaNacimiento">
               <Form.Label>Fecha de Nacimiento</Form.Label>
@@ -116,11 +139,11 @@ export default function Registro() {
                 type="text"
                 placeholder="Ej: FELICES50"
                 value={codigoPromo}
-                onChange={(e) => setCodigoPromo(e.target.value.toUpperCase())} // Convertimos a mayúsculas
+                onChange={(e) => setCodigoPromo(e.target.value.toUpperCase())}
               />
             </Form.Group>
 
-            <Button variant="secondary" type="submit" className="w-100 fw-bold">
+            <Button variant="secondary" type="submit" className="w-100 fw-bold" disabled={exito?.tipo === 'success'}>
               Registrarse
             </Button>
           </Form>

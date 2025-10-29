@@ -1,65 +1,88 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState } from 'react';
 
-// 1. Creamos el Contexto
 export const ContextoAutenticacion = createContext();
 
-// 2. Creamos el "Proveedor" (Provider) del contexto
 export default function ProveedorAutenticacion({ children }) {
-  // 3. Estado para el usuario.
-  // Intentamos leer el usuario desde localStorage al iniciar
+  
+  // --- Estados de Autenticación ---
   const [usuario, setUsuario] = useState(() => {
-    const usuarioGuardado = localStorage.getItem('usuario_pasteleria');
-    return usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+    const savedUser = localStorage.getItem('usuarioLogueado');
+    return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  // 4. Efecto para guardar en localStorage cada vez que 'usuario' cambie
-  useEffect(() => {
-    if (usuario) {
-      localStorage.setItem('usuario_pasteleria', JSON.stringify(usuario));
-    } else {
-      localStorage.removeItem('usuario_pasteleria');
-    }
-  }, [usuario]);
+  const [usuariosRegistrados, setUsuariosRegistrados] = useState(() => {
+    const savedUsers = localStorage.getItem('usuariosRegistrados');
+    return savedUsers ? JSON.parse(savedUsers) : [];
+  });
 
-  // 5. Función para registrar (simulada)
+  // --- ¡CAMBIO 1: Nuevo estado para mensajes! ---
+  // (Guardará mensajes de error)
+  const [mensaje, setMensaje] = useState(null);
+
+  // --- Funciones de Autenticación ---
+
   const registrarUsuario = (datosUsuario) => {
-    // Aquí iría la lógica para guardar en una BD, por ahora solo lo "logueamos"
-    setUsuario(datosUsuario);
-    console.log("Usuario registrado y logueado:", datosUsuario);
-  };
-
-  // 6. Función para iniciar sesión (simulada)
-  const iniciarSesion = (email, password) => {
-    // Lógica de inicio de sesión...
-    // Como es simulado, buscaremos si el email existe en localStorage 
-    // (en un proyecto real, esto lo valida un backend)
-    // Esta es una simulación MUY simple
-    const usuarioGuardado = JSON.parse(localStorage.getItem('usuario_pasteleria'));
-
-    if (usuarioGuardado && usuarioGuardado.email === email && usuarioGuardado.password === password) {
-      setUsuario(usuarioGuardado);
-      console.log("Inicio de sesión exitoso:", usuarioGuardado);
-      return true; // Éxito
-    } else {
-      console.error("Error de inicio de sesión: email o contraseña incorrectos");
-      return false; // Error
+    // Limpiamos mensajes de error anteriores
+    setMensaje(null);
+    
+    // Comprobamos si el email ya existe
+    if (usuariosRegistrados.find(u => u.email === datosUsuario.email)) {
+      // --- ¡CAMBIO 2: Usamos setMensaje en lugar de alert()! ---
+      setMensaje('Error: El email ya está registrado.');
+      return false; // Detenemos la función
     }
+
+    // Si no existe, lo agregamos
+    const nuevosUsuarios = [...usuariosRegistrados, datosUsuario];
+    setUsuariosRegistrados(nuevosUsuarios);
+    setUsuario(datosUsuario); // Logueamos al usuario nuevo
+
+    localStorage.setItem('usuariosRegistrados', JSON.stringify(nuevosUsuarios));
+    localStorage.setItem('usuarioLogueado', JSON.stringify(datosUsuario));
+    
+    return true; // Registro exitoso
   };
 
-  // 7. Función para cerrar sesión
+  const iniciarSesion = (email, password) => {
+    // Limpiamos mensajes de error anteriores
+    setMensaje(null);
+
+    const usuarioEncontrado = usuariosRegistrados.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    if (usuarioEncontrado) {
+      setUsuario(usuarioEncontrado);
+      localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioEncontrado));
+      return true; // Inicio de sesión exitoso
+    }
+
+    // --- ¡CAMBIO 3: Usamos setMensaje en lugar de alert()! ---
+    setMensaje('Error: Email o contraseña incorrectos.');
+    return false; // Inicio de sesión fallido
+  };
+
   const cerrarSesion = () => {
     setUsuario(null);
-    console.log("Sesión cerrada.");
+    localStorage.removeItem('usuarioLogueado');
+    setMensaje(null); // Limpiamos mensajes al cerrar sesión
   };
 
-  // 8. Proveemos los valores al resto de la app
+  // --- ¡CAMBIO 4: Nueva función para limpiar mensajes! ---
+  const limpiarMensaje = () => {
+    setMensaje(null);
+  };
+
   return (
     <ContextoAutenticacion.Provider
       value={{
-        usuario, // El estado del usuario (null si no está logueado)
+        usuario,
+        usuariosRegistrados,
+        mensaje, // Exportamos el mensaje
         registrarUsuario,
         iniciarSesion,
-        cerrarSesion
+        cerrarSesion,
+        limpiarMensaje // Exportamos la función de limpiar
       }}
     >
       {children}
