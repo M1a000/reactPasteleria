@@ -5,7 +5,6 @@ import { PasteleriaContext } from '../context/PasteleriaContext';
 // 2. Importamos el componente Card
 import Card from '../components/Card';
 
-// 3. ¡LA LÍNEA CLAVE! Asegúrate de que diga "export default function..."
 export default function Catalogo() {
   // 4. Obtenemos los productos y la función de agregar del contexto
   const { productos, agregarAlCarrito } = useContext(PasteleriaContext);

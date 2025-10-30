@@ -1,176 +1,156 @@
 import { useContext } from 'react';
+// 1. Importamos Link para el boton de "Ir a Pagar"
+import { Link } from 'react-router-dom'; 
+import { Container, ListGroup, Button, Alert, Row, Col, Image } from 'react-bootstrap';
+// Importamos ambos contextos
 import { PasteleriaContext } from '../context/PasteleriaContext';
-// 1. Importamos el contexto de autenticación y el Link
 import { ContextoAutenticacion } from '../context/ContextoAutenticacion';
-import { Link } from 'react-router-dom';
-import { ListGroup, Button, Alert } from 'react-bootstrap';
 
-
-// --- Funciones de Ayuda para Descuentos ---
-// (Las ponemos fuera del componente para que no se re-creen en cada render)
-
-/**
- * Calcula la edad de un usuario a partir de su fecha de nacimiento.
- * @param {string} fechaNacimiento - La fecha en formato YYYY-MM-DD.
- */
-const calcularEdad = (fechaNacimiento) => {
+// Funcion para calcular la edad (necesaria para el descuento)
+function calcularEdad(fechaNacimiento) {
   if (!fechaNacimiento) return 0;
-  // Creamos un objeto Date ajustado a la zona horaria local
-  const [year, month, day] = fechaNacimiento.split('-').map(Number);
-  const fechaNac = new Date(year, month - 1, day);
-
   const hoy = new Date();
-  let edad = hoy.getFullYear() - fechaNac.getFullYear();
-  const m = hoy.getMonth() - fechaNac.getMonth();
-  
-  // Ajuste si aún no ha sido el cumpleaños este año
-  if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
+  const cumple = new Date(fechaNacimiento);
+  let edad = hoy.getFullYear() - cumple.getFullYear();
+  const m = hoy.getMonth() - cumple.getMonth();
+  if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) {
     edad--;
   }
   return edad;
-};
+}
 
-/**
- * Verifica si hoy es el cumpleaños del usuario.
- * @param {string} fechaNacimiento - La fecha en formato YYYY-MM-DD.
- */
-const esCumpleanos = (fechaNacimiento) => {
-  if (!fechaNacimiento) return false;
-  // Creamos un objeto Date ajustado
-  const [year, month, day] = fechaNacimiento.split('-').map(Number);
-  const fechaNac = new Date(year, month - 1, day);
-
-  const hoy = new Date();
-  
-  // Comparamos solo mes y día
-  return hoy.getMonth() === fechaNac.getMonth() && hoy.getDate() === fechaNac.getDate();
-};
-// --- Fin de Funciones de Ayuda ---
-
+// Funcion para verificar si es el cumpleanos (necesaria para el descuento)
+function esSuCumple(fechaNacimiento) {
+    if (!fechaNacimiento) return false;
+    const hoy = new Date();
+    const cumple = new Date(fechaNacimiento);
+    return hoy.getDate() === cumple.getDate() && hoy.getMonth() === cumple.getMonth();
+}
 
 export default function Carrito() {
+  // Obtenemos datos de los contextos
   const { carrito, total, incrementar, decrementar } = useContext(PasteleriaContext);
-  // 2. Obtenemos el usuario del contexto de autenticación
   const { usuario } = useContext(ContextoAutenticacion);
 
-  // --- LÓGICA DE DESCUENTOS ---
+  // --- LOGICA DE DESCUENTOS ---
   let descuento = 0;
   let motivoDescuento = null;
+  const PRECIO_TORTA_GRATIS = 40000; // Definimos el valor de la torta gratis
 
-  // 3. Aplicar descuentos solo si el usuario está logueado
   if (usuario) {
     const edad = calcularEdad(usuario.fechaNacimiento);
-
-    // Requisito 1: > 50 años (50% desc)
+    
+    // 1. Descuento +50 Anos (50%)
     if (edad > 50) {
       descuento = total * 0.50;
-      motivoDescuento = "Descuento 50 Aniversario (+50 años): 50%";
-    }
-    // Requisito 2: Código FELICES50 (10% desc)
+      motivoDescuento = "Descuento +50 Anos (50%)";
+    } 
+    // 2. Codigo FELICES50 (10%) - Solo si no aplica el de +50
     else if (usuario.codigoPromo === 'FELICES50') {
       descuento = total * 0.10;
-      motivoDescuento = "Descuento Código 'FELICES50': 10%";
+      motivoDescuento = "Descuento codigo FELICES50 (10%)";
     }
-    // Requisito 3: Estudiante Duoc en su cumpleaños (Torta gratis)
-    else if (usuario.email.toLowerCase().endsWith('@duoc.cl') && esCumpleanos(usuario.fechaNacimiento)) {
-      // (Simplificación: "Torta gratis" se interpreta como 100% de descuento en el pedido)
-      descuento = total; 
-      motivoDescuento = "¡Feliz Cumpleaños! Por ser de Duoc, tu pedido es GRATIS.";
+    // 3. Torta gratis Duoc (Cumpleanos y email @duoc) - Solo si no aplican los anteriores
+    else if (usuario.email && (usuario.email.endsWith('@duoc.cl') || usuario.email.endsWith('@duocuc.cl') || usuario.email.endsWith('@profesor.duoc.cl')) && esSuCumple(usuario.fechaNacimiento)) {
+      if (total >= PRECIO_TORTA_GRATIS) {
+        descuento = PRECIO_TORTA_GRATIS;
+        motivoDescuento = `¡Feliz Cumpleanos Duoc! Torta Gratis (-$${PRECIO_TORTA_GRATIS.toLocaleString('es-CL')})`;
+      } else {
+        motivoDescuento = "¡Feliz Cumpleanos Duoc! Agrega mas productos para tu torta gratis.";
+      }
     }
   }
+  
+  const totalFinal = Math.max(0, total - descuento); 
+  // ------------------------------
 
-  // 4. Calculamos el total final
-  const totalFinal = total - descuento;
-  // --- Fin Lógica Descuentos ---
-
-  // 5. Verificamos si el carrito está vacío
-  if (carrito.length === 0) {
-    return (
-      <div className="container mt-5 text-center">
-        <Alert variant="info">
-          <h2 style={{ fontFamily: 'Pacifico, cursive' }}>Tu carrito está vacío</h2>
-          <p>Añade algunos productos deliciosos de nuestro catálogo.</p>
-        </Alert>
-      </div>
-    );
-  }
-
-  // 6. Si hay productos, los mostramos
   return (
-    <div className="container mt-5 p-4 bg-light rounded shadow-sm">
-      <h1 className="text-center" style={{ fontFamily: 'Pacifico, cursive' }}>Detalle de tu Pedido</h1>
+    <Container className="my-5">
+      <h2 style={{ fontFamily: 'Pacifico, cursive' }} className="text-center mb-4">
+        Mi Carrito de Compras
+      </h2>
       
-      <ListGroup variant="flush">
-        {carrito.map((item, index) => (
-          <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center flex-wrap">
-            <div className="d-flex align-items-center">
-              <img src={item.img} alt={item.nombre} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />
-              <div className="ms-3">
-                <h5 className="mb-0">{item.nombre}</h5>
-                <small className="text-muted">${(item.precio).toLocaleString('es-CL')}</small>
-              </div>
-            </div>
-            
-            <div className="d-flex align-items-center mt-2 mt-md-0">
-              <Button 
-                variant="outline-danger" 
-                size="sm" 
-                onClick={() => decrementar(item.id)}
-                className="me-2 fw-bold"
-              >
-                -
-              </Button>
-              <span className="fw-bold mx-2">{item.cantidad}</span>
-              <Button 
-                variant="outline-primary" 
-                size="sm" 
-                onClick={() => incrementar(item.id)}
-                className="ms-2 fw-bold"
-              >
-                +
-              </Button>
-              <span className="fw-bold ms-4" style={{ width: '100px', textAlign: 'right' }}>
-                ${(item.precio * item.cantidad).toLocaleString('es-CL')}
-              </span>
-            </div>
-          </ListGroup.Item>
-        ))}
-      </ListGroup>
+      {carrito.length === 0 ? (
+        <Alert variant="info" className="text-center">
+          Tu carrito esta vacio. ¡<Link to="/catalogo">Mira nuestro catalogo</Link>!
+        </Alert>
+      ) : (
+        <Row>
+          {/* Columna Lista de Productos */}
+          <Col md={8}>
+            <ListGroup variant="flush">
+              {carrito.map((item) => (
+                <ListGroup.Item key={item.id} className="d-flex justify-content-between align-items-center flex-wrap">
+                  {/* Imagen y Nombre */}
+                  <div className="d-flex align-items-center mb-2 mb-md-0 col-12 col-md-5">
+                    <Image 
+                      src={item.img} 
+                      alt={item.nombre} 
+                      style={{ width: '60px', height: '60px', objectFit: 'cover', marginRight: '15px' }} 
+                      rounded 
+                    />
+                    <span className="fw-bold">{item.nombre}</span>
+                  </div>
+                  {/* Controles de Cantidad */}
+                  <div className="d-flex align-items-center justify-content-end justify-content-md-start col-6 col-md-3">
+                    <Button variant="outline-secondary" size="sm" onClick={() => decrementar(item.id)}>-</Button>
+                    <span className="mx-2">{item.cantidad}</span>
+                    <Button variant="outline-secondary" size="sm" onClick={() => incrementar(item.id)}>+</Button>
+                  </div>
+                  {/* Precio Total Item */}
+                  <div className="fw-bold col-6 col-md-3 text-end">
+                    ${(item.precio * item.cantidad).toLocaleString('es-CL')}
+                  </div>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          </Col>
 
-      {/* 7. Sección de Totales (Actualizada) */}
-      <div className="mt-4">
-        {/* 8. Mostrar aviso si no está logueado */}
-        {!usuario && (
-          <Alert variant="info" className="text-start p-3 mt-3">
-            <Alert.Heading as="h5" style={{fontFamily: 'Pacifico, cursive'}}>¡Inicia sesión para ver tus descuentos!</Alert.Heading>
-            <p className="mb-0">
-              Podrías tener descuentos por tu cumpleaños, edad o códigos promocionales.
-            </p>
-            <Button as={Link} to="/login" variant="primary" className="mt-2 fw-bold">Iniciar Sesión</Button>
-          </Alert>
-        )}
-        
-        {/* 9. Mostrar el descuento aplicado si existe */}
-        {descuento > 0 && (
-          <Alert variant="success" className="text-start p-3 mt-3">
-            <Alert.Heading as="h5" style={{fontFamily: 'Pacifico, cursive'}}>¡Descuento Aplicado!</Alert.Heading>
-            <p className="mb-0">{motivoDescuento}</p>
-          </Alert>
-        )}
+          {/* Columna Resumen y Pagar */}
+          <Col md={4} className="mt-4 mt-md-0">
+            <div className="bg-light p-3 rounded shadow-sm">
+              <h4 className="mb-3">Resumen</h4>
+              <ListGroup variant="flush">
+                <ListGroup.Item className="d-flex justify-content-between">
+                  <span>Subtotal</span>
+                  <span>${total.toLocaleString('es-CL')}</span>
+                </ListGroup.Item>
+                
+                {descuento > 0 && (
+                  <ListGroup.Item className="d-flex justify-content-between text-success">
+                    <span>{motivoDescuento}</span>
+                    <span>-${descuento.toLocaleString('es-CL')}</span>
+                  </ListGroup.Item>
+                )}
+                 {motivoDescuento && descuento === 0 && motivoDescuento.includes("Duoc") && (
+                     <ListGroup.Item className="text-info small">
+                        {motivoDescuento}
+                     </ListGroup.Item>
+                 )}
 
-        <hr/>
-        <div className="text-end">
-          <h3 className="fw-normal">Subtotal: ${(total).toLocaleString('es-CL')}</h3>
-          {descuento > 0 && (
-            <h4 className="text-danger">Descuento: -${(descuento).toLocaleString('es-CL')}</h4>
-          )}
-          <h2 className="fw-bold mt-2">Total a Pagar: ${(totalFinal).toLocaleString('es-CL')}</h2>
-          <Button variant="success" size="lg" className="mt-2 fw-bold">
-            Ir a Pagar
-          </Button>
-        </div>
-      </div>
-    </div>
+                <ListGroup.Item className="d-flex justify-content-between fw-bold">
+                  <span>Total a Pagar</span>
+                  <span>${totalFinal.toLocaleString('es-CL')}</span>
+                </ListGroup.Item>
+              </ListGroup>
+
+              {/* --- ¡CAMBIO AQUI! --- */}
+              {/* El boton ahora lleva a /checkout */}
+              <Button 
+                as={Link} 
+                // Cambiamos 'to' de "/pago-paypal" a "/checkout"
+                to="/checkout" 
+                variant="success" 
+                size="lg" 
+                className="w-100 mt-3 fw-bold"
+              >
+                Ir a Pagar
+              </Button>
+            </div>
+          </Col>
+        </Row>
+      )}
+    </Container>
   );
 }
 

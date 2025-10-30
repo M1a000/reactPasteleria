@@ -7,7 +7,7 @@ export default function Registro() {
   const { registrarUsuario, mensaje, limpiarMensaje } = useContext(ContextoAutenticacion);
   const navigate = useNavigate();
 
-  // --- ¡CAMBIO 1: Añadimos estado para el nombre! ---
+  // Estados para el formulario
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +30,6 @@ export default function Registro() {
     setExito(null); 
     limpiarMensaje(); 
 
-    // --- ¡CAMBIO 2: Añadimos validación para el nombre! ---
     if (password !== passwordConfirm) {
       return setExito({ tipo: 'danger', texto: 'Las contraseñas no coinciden.' });
     }
@@ -38,7 +37,6 @@ export default function Registro() {
       return setExito({ tipo: 'danger', texto: 'Nombre, email, contraseña y fecha de nacimiento son obligatorios.' });
     }
 
-    // --- ¡CAMBIO 3: Añadimos el nombre a los datos del usuario! ---
     const datosUsuario = {
       nombre,
       email,
@@ -50,11 +48,12 @@ export default function Registro() {
     const registroExitoso = registrarUsuario(datosUsuario);
 
     if (registroExitoso) {
-      setExito({ tipo: 'success', texto: '¡Registro exitoso! Redirigiendo al catálogo...' });
+      
+      setExito({ tipo: 'success', texto: '¡Registro exitoso! Serás redirigido al catálogo en 5 segundos...' }); 
       
       setTimeout(() => {
         navigate('/catalogo');
-      }, 2000);
+      }, 5000); // 5000 milisegundos = 5 segundos
 
     } 
   };
@@ -70,12 +69,16 @@ export default function Registro() {
             Y accede a beneficios exclusivos como descuentos y más.
           </p>
 
-          {exito && <Alert variant={exito.tipo}>{exito.texto}</Alert>}
-          {mensaje && <Alert variant="danger">{mensaje}</Alert>}
+          {/* --- ¡CAMBIO! Movemos los mensajes aquí, FUERA y ANTES del Form --- */}
+          {/* Mantenemos el margen inferior (mb-3) para separar la alerta del formulario */}
+          {exito && <Alert variant={exito.tipo} className="mb-3">{exito.texto}</Alert>}
+          {mensaje && <Alert variant="danger" className="mb-3">{mensaje}</Alert>}
 
           <Form onSubmit={handleSubmit} className="p-4 bg-light rounded shadow-sm">
             
-            {/* --- ¡CAMBIO 4: Añadimos el campo Nombre al formulario! --- */}
+            {/* --- ¡LOS MENSAJES YA NO ESTÁN AQUÍ! --- */}
+            {/* Se movieron a la parte superior, fuera del Form */}
+
             <Form.Group className="mb-3" controlId="formNombre">
               <Form.Label>Nombre</Form.Label>
               <Form.Control

@@ -4,7 +4,7 @@ export const ContextoAutenticacion = createContext();
 
 export default function ProveedorAutenticacion({ children }) {
   
-  // --- Estados de Autenticación ---
+  // --- Estados de Autenticacion ---
   const [usuario, setUsuario] = useState(() => {
     const savedUser = localStorage.getItem('usuarioLogueado');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -15,36 +15,36 @@ export default function ProveedorAutenticacion({ children }) {
     return savedUsers ? JSON.parse(savedUsers) : [];
   });
 
-  // --- ¡CAMBIO 1: Nuevo estado para mensajes! ---
-  // (Guardará mensajes de error)
   const [mensaje, setMensaje] = useState(null);
 
-  // --- Funciones de Autenticación ---
+  // --- Funciones de Autenticacion ---
 
   const registrarUsuario = (datosUsuario) => {
-    // Limpiamos mensajes de error anteriores
     setMensaje(null);
     
-    // Comprobamos si el email ya existe
     if (usuariosRegistrados.find(u => u.email === datosUsuario.email)) {
-      // --- ¡CAMBIO 2: Usamos setMensaje en lugar de alert()! ---
-      setMensaje('Error: El email ya está registrado.');
-      return false; // Detenemos la función
+      setMensaje('Error: El email ya esta registrado.');
+      return false; 
     }
 
-    // Si no existe, lo agregamos
-    const nuevosUsuarios = [...usuariosRegistrados, datosUsuario];
+    // --- ¡CAMBIO 1: Añadimos telefono y fotoPerfil vacios al registrar! ---
+    const nuevoUsuario = { 
+      ...datosUsuario, 
+      telefono: '', 
+      fotoPerfil: null 
+    };
+    
+    const nuevosUsuarios = [...usuariosRegistrados, nuevoUsuario];
     setUsuariosRegistrados(nuevosUsuarios);
-    setUsuario(datosUsuario); // Logueamos al usuario nuevo
+    setUsuario(nuevoUsuario); 
 
     localStorage.setItem('usuariosRegistrados', JSON.stringify(nuevosUsuarios));
-    localStorage.setItem('usuarioLogueado', JSON.stringify(datosUsuario));
+    localStorage.setItem('usuarioLogueado', JSON.stringify(nuevoUsuario));
     
-    return true; // Registro exitoso
+    return true;
   };
 
   const iniciarSesion = (email, password) => {
-    // Limpiamos mensajes de error anteriores
     setMensaje(null);
 
     const usuarioEncontrado = usuariosRegistrados.find(
@@ -54,35 +54,60 @@ export default function ProveedorAutenticacion({ children }) {
     if (usuarioEncontrado) {
       setUsuario(usuarioEncontrado);
       localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioEncontrado));
-      return true; // Inicio de sesión exitoso
+      return true;
     }
 
-    // --- ¡CAMBIO 3: Usamos setMensaje en lugar de alert()! ---
-    setMensaje('Error: Email o contraseña incorrectos.');
-    return false; // Inicio de sesión fallido
+    setMensaje('Error: Email o contrasena incorrectos.');
+    return false;
   };
 
   const cerrarSesion = () => {
     setUsuario(null);
     localStorage.removeItem('usuarioLogueado');
-    setMensaje(null); // Limpiamos mensajes al cerrar sesión
+    setMensaje(null);
   };
 
-  // --- ¡CAMBIO 4: Nueva función para limpiar mensajes! ---
   const limpiarMensaje = () => {
     setMensaje(null);
   };
+
+  // --- ¡CAMBIO 2: 'actualizarUsuario' ahora guarda la fotoPerfil! ---
+  const actualizarUsuario = (nuevosDatos) => {
+    // 1. Actualizamos el usuario de la sesion actual
+    // (nuevosDatos ahora incluye 'fotoPerfil')
+    const usuarioActualizado = { ...usuario, ...nuevosDatos };
+    setUsuario(usuarioActualizado);
+    localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioActualizado));
+
+    // 2. Actualizamos la lista principal de usuarios registrados
+    const emailOriginal = usuario.email; 
+    
+    const listaActualizada = usuariosRegistrados.map(u => {
+      if (u.email === emailOriginal) {
+        // Reemplazamos el usuario con los nuevos datos (preservando la contraseña)
+        return { ...u, ...nuevosDatos };
+      }
+      return u;
+    });
+
+    setUsuariosRegistrados(listaActualizada);
+    localStorage.setItem('usuariosRegistrados', JSON.stringify(listaActualizada));
+    
+    return true; 
+  };
+
 
   return (
     <ContextoAutenticacion.Provider
       value={{
         usuario,
         usuariosRegistrados,
-        mensaje, // Exportamos el mensaje
+        mensaje,
         registrarUsuario,
         iniciarSesion,
         cerrarSesion,
-        limpiarMensaje // Exportamos la función de limpiar
+        limpiarMensaje,
+        actualizarUsuario 
       }}
     >
       {children}

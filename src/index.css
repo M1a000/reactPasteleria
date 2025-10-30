@@ -1,37 +1,32 @@
-/* 1. Usamos '*' (selector universal) para forzar los colores y la fuente
-   en TODOS los elementos, dándoles más importancia que al default de Bootstrap.
-*/
+/* --- ESTILOS GENERALES --- */
 * {
-  color: #5D4037; /* Texto Principal: Marrón Oscuro */
-  font-family: 'Lato', sans-serif !important; /* Fuente Principal (forzada) */
+  color: #5D4037; /* Texto Principal: Marron Oscuro */
+  font-family: 'Lato', sans-serif !important;
 }
 
 body {
   background-color: #FFF5E1; /* Crema Pastel */
 }
 
-/* 2. Definimos los colores de los títulos y la barra de navegación */
 h1, h2, h3, h4, h5, h6, .navbar-brand {
-  font-family: 'Pacifico', cursive !important; /* Fuente de Encabezado (forzada) */
-  color: #5D4037; /* Marrón Oscuro */
+  font-family: 'Pacifico', cursive !important;
+  color: #5D4037;
 }
 
-/* 3. Definimos una clase para el Texto Secundario (Gris Claro) */
 .text-secundario {
   color: #B0BEC5 !important;
 }
 
-/* --- Colores de Botones (como antes) --- */
+/* --- ESTILOS DE BOTONES --- */
 .btn-primary {
-  background-color: #FFC0CB; /* Rosa Suave */
+  background-color: #FFC0CB;
   border-color: #FFC0CB;
-  color: #5D4037; /* Texto oscuro para que contraste */
+  color: #5D4037;
 }
 
 .btn-secondary {
-  background-color: #8B4000; /* Chocolate (un poco más oscuro) */
+  background-color: #8B4000;
   border-color: #8B4000;
-  /* El color del texto (blanco) lo define Bootstrap por defecto */
 }
 
 .btn-success {
@@ -49,11 +44,54 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   opacity: 0.8;
 }
 
-/* Ajuste para que los links de la Navbar (blancos) no se pongan marrones */
-.navbar-nav .nav-link, .navbar-brand, .navbar-text {
+/* --- ESTILOS DE NAVBAR LINKS (LA SOLUCION) --- */
+
+/* 1. Estilo INACTIVO (Opaco) */
+/* Lo hacemos mas especifico para ganar a Bootstrap */
+.navbar-nav .nav-link-custom {
+  color: white !important;
+  opacity: 0.75; /* Opacidad al 75% */
+  font-weight: normal;
+  text-decoration: none;
+  /* Transicion suave */
+  transition: opacity 0.2s ease, color 0.2s ease, text-decoration 0.2s ease;
+}
+
+/* 2. Estilo ACTIVO (Subrayado, Fuerte) */
+.navbar-nav .nav-link-custom.active {
+  opacity: 1;
+  font-weight: bold;
+  text-decoration: underline;
+  color: white !important; /* Aseguramos que siga blanco */
+}
+
+/* 3. Estilo HOVER (Rosado, Fuerte) */
+/* Tambien aplica al link activo */
+.navbar-nav .nav-link-custom:hover,
+.navbar-nav .nav-link-custom.active:hover {
+  opacity: 1;
+  color: #FFC0CB !important; /* El color Rosa Suave que te gusta */
+}
+
+/* 4. Aseguramos que los links de la Navbar (blancos) no se pongan marrones */
+.navbar-brand, .navbar-text {
   color: white !important;
 }
-.navbar-nav .nav-link:hover {
-  color: #FFC0CB !important; /* Rosa al pasar el mouse */
+.navbar-brand:hover {
+  color: #FFC0CB !important;
+}
+
+
+/* --- ESTILOS DE IMAGENES --- */
+.carousel-img-fixed-height {
+  height: 400px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.card-img-fixed-height {
+  height: 250px;
+  object-fit: cover;
+  width: 100%;
 }
 

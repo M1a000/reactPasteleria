@@ -1,70 +1,67 @@
 import { useContext } from 'react';
-// 1. Importamos los hooks necesarios
-import { useParams, useNavigate } from 'react-router-dom';
-// 2. Importamos el contexto de la pastelería
+// 1. Importamos Link para el boton de "Volver"
+import { useParams, Link } from 'react-router-dom';
 import { PasteleriaContext } from '../context/PasteleriaContext';
-import { Container, Row, Col, Button, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Image, Button, Alert } from 'react-bootstrap';
 
 export default function DetalleProducto() {
-  // 3. Obtenemos el 'id' de la URL
   const { id } = useParams();
-  const navigate = useNavigate();
-  
-  // 4. Obtenemos los productos y la función de agregar
   const { productos, agregarAlCarrito } = useContext(PasteleriaContext);
 
-  // 5. Buscamos el producto específico
+  // Buscamos el producto usando el 'id' de la URL
   const producto = productos.find((p) => p.id === id);
 
-  // 6. Manejo si el producto no se encuentra
+  // Si el producto no se encuentra (por ej, URL manual incorrecta)
   if (!producto) {
     return (
       <Container className="my-5 text-center">
-        <Alert variant="danger">
-          <h3>¡Oh no!</h3>
-          <p>El producto que buscas no existe.</p>
-          <Button variant="secondary" onClick={() => navigate('/catalogo')}>
-            Volver al Catálogo
-          </Button>
-        </Alert>
+        <Alert variant="danger">Producto no encontrado.</Alert>
+        <Button as={Link} to="/catalogo" variant="primary">
+          Volver al Catalogo
+        </Button>
       </Container>
     );
   }
 
+  // Si el producto se encuentra, mostramos los detalles
   return (
     <Container className="my-5">
-      <Row className="justify-content-center align-items-center">
+      <Row className="justify-content-center bg-light p-4 p-md-5 rounded shadow-sm">
         {/* Columna de la Imagen */}
-        <Col md={12} lg={6} className="text-center mb-4 mb-lg-0">
-          <img 
-            src={producto.img} 
-            alt={producto.nombre} 
-            className="img-fluid rounded shadow-sm" 
-            style={{maxHeight: '500px', objectFit: 'cover'}}
-          />
+        <Col md={6}>
+          <Image src={producto.img} rounded fluid alt={producto.nombre} />
         </Col>
-
+        
         {/* Columna del Texto */}
-        <Col md={12} lg={6}>
+        <Col md={6} className="d-flex flex-column justify-content-center mt-4 mt-md-0">
           <h1 style={{ fontFamily: 'Pacifico, cursive' }}>{producto.nombre}</h1>
-          <hr />
           
-          {/* 7. ¡AQUÍ ESTÁ EL CAMBIO! Aplicamos la clase de texto secundario */}
+          {/* Aplicamos la clase de texto secundario (gris) */}
           <p className="lead text-secundario">{producto.descripcion}</p>
+
+          <h3 className="fw-bold my-3">
+            Precio: ${producto.precio.toLocaleString('es-CL')}
+          </h3>
+
+          <Button 
+            variant="secondary" 
+            size="lg" 
+            className="fw-bold mb-3"
+            onClick={() => agregarAlCarrito(producto)}
+          >
+            Añadir al Carrito
+          </Button>
+
+          {/* --- ¡SOLUCION! Boton para volver al catalogo --- */}
+          <Button 
+            as={Link} 
+            to="/catalogo" 
+            variant="outline-secondary"
+            className="mt-2"
+          >
+            ← Volver al Catalogo
+          </Button>
           
-          <div className="d-flex justify-content-between align-items-center mt-4">
-            <h2 className="mb-0" style={{color: '#8B4000'}}>
-              ${producto.precio.toLocaleString('es-CL')}
-            </h2>
-            <Button 
-              variant="secondary" 
-              size="lg" 
-              onClick={() => agregarAlCarrito(producto)}
-              className="fw-bold"
-            >
-              Añadir al Carrito
-            </Button>
-          </div>
         </Col>
       </Row>
     </Container>

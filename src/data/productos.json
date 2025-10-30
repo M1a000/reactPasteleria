@@ -5,7 +5,7 @@
     "nombre": "Torta Cuadrada de Chocolate",
     "precio": 45000,
     "descripcion": "Deliciosa torta de chocolate con capas de ganache y un toque de avellanas. Personalizable con mensajes especiales.",
-    "img": "https://images.pexels.com/photos/4109998/pexels-photo-4109998.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "img": "https://images.pexels.com/photos/19940993/pexels-photo-19940993.png "
   },
   {
     "id": "TC002",
@@ -13,23 +13,23 @@
     "nombre": "Torta Cuadrada de Frutas",
     "precio": 50000,
     "descripcion": "Una mezcla de frutas frescas y crema chantilly sobre un suave bizcocho de vainilla, ideal para celebraciones.",
-    "img": "https://images.pexels.com/photos/14107/pexels-photo-14107.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "img": "https://images.pexels.com/photos/11745446/pexels-photo-11745446.jpeg"
   },
   {
     "id": "TT001",
     "categoria": "Tortas Circulares",
     "nombre": "Torta Circular de Vainilla",
     "precio": 40000,
-    "descripcion": "Bizcocho de vainilla clásico relleno con crema pastelera y cubierto con un glaseado dulce, perfecto para cualquier ocasión.",
-    "img": "https://images.pexels.com/photos/1028714/pexels-photo-1028714.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Bizcocho de vainilla clasico relleno con crema pastelera y cubierto con un glaseado dulce, perfecto para cualquier ocasion.",
+    "img": "https://images.pexels.com/photos/8015147/pexels-photo-8015147.jpeg"
   },
   {
     "id": "TT002",
     "categoria": "Tortas Circulares",
     "nombre": "Torta Circular de Manjar",
     "precio": 42000,
-    "descripcion": "Torta tradicional chilena con manjar y nueces, un deleite para los amantes de los sabores dulces y clásicos.",
-    "img": "https://images.pexels.com/photos/5946654/pexels-photo-5946654.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Torta tradicional chilena con manjar y nueces, un deleite para los amantes de los sabores dulces y clasicos.",
+    "img": "https://images.pexels.com/photos/15366689/pexels-photo-15366689.jpeg"
   },
   {
     "id": "PI001",
@@ -37,47 +37,47 @@
     "nombre": "Mousse de Chocolate",
     "precio": 5000,
     "descripcion": "Postre individual cremoso y suave, hecho con chocolate de alta calidad, ideal para los amantes del chocolate.",
-    "img": "https://images.pexels.com/photos/2059413/pexels-photo-2059413.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "img": "https://images.pexels.com/photos/3026810/pexels-photo-3026810.jpeg"
   },
   {
     "id": "PI002",
     "categoria": "Postres Individuales",
-    "nombre": "Tiramisú Clásico",
+    "nombre": "Tiramisu Clasico",
     "precio": 5500,
-    "descripcion": "Un postre italiano individual con capas de café, mascarpone y cacao, perfecto para finalizar cualquier comida.",
-    "img": "https://images.pexels.com/photos/6287524/pexels-photo-6287524.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Un postre italiano individual con capas de cafe, mascarpone y cacao, perfecto para finalizar cualquier comida.",
+    "img": "https://images.pexels.com/photos/10170054/pexels-photo-10170054.jpeg"
   },
   {
     "id": "PSA001",
-    "categoria": "Productos Sin Azúcar",
-    "nombre": "Torta Sin Azúcar de Naranja",
+    "categoria": "Productos Sin Azucar",
+    "nombre": "Torta Sin Azucar de Naranja",
     "precio": 48000,
-    "descripcion": "Torta ligera y deliciosa, endulzada naturally, ideal para quienes buscan opciones más saludables.",
-    "img": "https://images.pexels.com/photos/1120038/pexels-photo-1120038.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Torta ligera y deliciosa, endulzada naturalmente, ideal para quienes buscan opciones mas saludables.",
+    "img": "https://images.pexels.com/photos/12335514/pexels-photo-12335514.jpeg"
   },
   {
     "id": "PSA002",
-    "categoria": "Productos Sin Azúcar",
-    "nombre": "Cheesecake Sin Azúcar",
+    "categoria": "Productos Sin Azucar",
+    "nombre": "Cheesecake Sin Azucar",
     "precio": 47000,
-    "descripcion": "Suave y cremoso, este cheesecake es una opción perfecta para disfrutar sin culpa.",
-    "img": "https://images.pexels.com/photos/264726/pexels-photo-264726.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Suave y cremoso, este cheesecake es una opcion perfecta para disfrutar sin culpa.",
+    "img": "https://images.pexels.com/photos/4040691/pexels-photo-4040691.jpeg"
   },
   {
     "id": "PT001",
-    "categoria": "Pastelería Tradicional",
+    "categoria": "Pasteleria Tradicional",
     "nombre": "Empanada de Manzana",
     "precio": 3000,
-    "descripcion": "Pastelería tradicional rellena de manzanas especiadas, perfecta para un dulce desayuno o merienda.",
-    "img": "https://images.pexels.com/photos/2434237/pexels-photo-2434237.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Pasteleria tradicional rellena de manzanas especiadas, perfecta para un dulce desayuno o merienda.",
+    "img": "https://images.pexels.com/photos/230125/pexels-photo-230125.jpeg"
   },
   {
     "id": "PT002",
-    "categoria": "Pastelería Tradicional",
+    "categoria": "Pasteleria Tradicional",
     "nombre": "Tarta de Santiago",
     "precio": 6000,
-    "descripcion": "Tradicional tarta española hecha con almendras, azúcar, y huevos, una delicia para los amantes de los postres clásicos.",
-    "img": "https://images.pexels.com/photos/13274300/pexels-photo-13274300.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Tradicional tarta española hecha con almendras, azucar, y huevos, una delicia para los amantes de los postres clasicos.",
+    "img": "https://images.pexels.com/photos/34492391/pexels-photo-34492391.jpeg"
   },
   {
     "id": "PG001",
@@ -85,47 +85,47 @@
     "nombre": "Brownie Sin Gluten",
     "precio": 4000,
     "descripcion": "Rico y denso, este brownie es perfecto para quienes necesitan evitar el gluten sin sacrificar el sabor.",
-    "img": "https://images.pexels.com/photos/5848799/pexels-photo-5848799.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "img": "https://images.pexels.com/photos/2067396/pexels-photo-2067396.jpeg"
   },
   {
     "id": "PG002",
     "categoria": "Productos Sin Gluten",
     "nombre": "Pan Sin Gluten",
     "precio": 3500,
-    "descripcion": "Suave y esponjoso, ideal para sándwiches o para acompañar cualquier comida.",
-    "img": "https://images.pexels.com/photos/7956894/pexels-photo-7956894.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Suave y esponjoso, ideal para sandwiches o para acompanar cualquier comida.",
+    "img": "https://images.pexels.com/photos/34444367/pexels-photo-34444367.jpeg"
   },
   {
     "id": "PV001",
     "categoria": "Productos Vegana",
     "nombre": "Torta Vegana de Chocolate",
     "precio": 50000,
-    "descripcion": "Torta de chocolate húmeda y deliciosa, hecha sin productos de origen animal, perfecta para veganos.",
-    "img": "https://images.pexels.com/photos/6061906/pexels-photo-6061906.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Torta de chocolate humeda y deliciosa, hecha sin productos de origen animal, perfecta para veganos.",
+    "img": "https://images.pexels.com/photos/19202777/pexels-photo-19202777.jpeg"
   },
   {
     "id": "PV002",
     "categoria": "Productos Vegana",
     "nombre": "Galletas Veganas de Avena",
     "precio": 4500,
-    "descripcion": "Crujientes y sabrosas, estas galletas son una excelente opción para un snack saludable y vegano.",
-    "img": "https://images.pexels.com/photos/6796582/pexels-photo-6796582.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Crujientes y sabrosas, estas galletas son una excelente opcion para un snack saludable y vegano.",
+    "img": "https://images.pexels.com/photos/17741886/pexels-photo-17741886.jpeg"
   },
   {
     "id": "TE001",
     "categoria": "Tortas Especiales",
-    "nombre": "Torta Especial de Cumpleaños",
+    "nombre": "Torta Especial de Cumpleanos",
     "precio": 55000,
-    "descripcion": "Diseñada especialmente para celebraciones, personalizable con decoraciones y mensajes únicos.",
-    "img": "https://images.pexels.com/photos/1854652/pexels-photo-1854652.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Disenada especialmente para celebraciones, personalizable con decoraciones y mensajes unicos.",
+    "img": "https://images.pexels.com/photos/30464364/pexels-photo-30464364.jpeg"
   },
   {
     "id": "TE002",
     "categoria": "Tortas Especiales",
     "nombre": "Torta Especial de Boda",
     "precio": 60000,
-    "descripcion": "Elegante y deliciosa, esta torta está diseñada para ser el centro de atención en cualquier boda.",
-    "img": "https://images.pexels.com/photos/2253643/pexels-photo-2253643.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    "descripcion": "Elegante y deliciosa, esta torta esta disenada para ser el centro de atencion en cualquier boda.",
+    "img": "https://images.pexels.com/photos/10123066/pexels-photo-10123066.jpeg"
   }
 ]
 
