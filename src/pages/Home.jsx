@@ -36,7 +36,7 @@ export default function Home() {
     if (!datosBoleta) return; // Seguridad por si acaso
 
     // Construimos el contenido del archivo .txt
-    let contenido = `--- BOLETA PASTELERIA 1000 SABORES ---\n\n`;
+    let contenido = `--- BOLETA PASTELERIA MIL SABORES ---\n\n`;
     contenido += `Fecha: ${new Date().toLocaleDateString('es-CL')} ${new Date().toLocaleTimeString('es-CL')}\n`;
     contenido += `---------------------------------------\n\n`;
     contenido += `Productos:\n`;
@@ -75,20 +75,21 @@ export default function Home() {
           className="display-3" 
           style={{ fontFamily: 'Pacifico, cursive', color: '#8B4513' }}
         >
-          ¡Bienvenido a 1000 Sabores!
+          ¡Bienvenido a Mil Sabores!
         </h1>
         <p className="lead" style={{ color: '#5D4037' }}>
-          Celebrando 50 anos de tradicion y dulzura.
+          Celebrando 50 años de tradicion y dulzura.
         </p>
         <p style={{ color: '#5D4037' }}>
-          Descubre por que somos un referente en la reposteria chilena.
+          Descubre por qué somos un referente en la reposteria chilena.
         </p>
         <Button 
           as={Link} 
           to="/catalogo" 
           variant="secondary" 
           size="lg"
-          className="fw-bold"
+          className  ="fw-bold"
+          
         >
           Ver Catalogo
         </Button>
