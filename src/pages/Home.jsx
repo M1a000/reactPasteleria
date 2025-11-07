@@ -1,63 +1,68 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Container, Button, Alert } from 'react-bootstrap';
+import { useEffect, useState, useContext } from 'react'; // 1. Importamos useContext
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // 2. Importamos useNavigate
+import { Container, Button, Alert, Row, Col } from 'react-bootstrap'; // 3. Importamos Row y Col
+import { PasteleriaContext } from '../context/PasteleriaContext'; // 4. Importamos el Contexto
+import Card from '../components/Card'; // 5. Importamos la Tarjeta
 
 export default function Home() {
   const location = useLocation();
-  
-  // 1. Estados locales para mensajes y datos de la boleta
-  const [mensajeExito, setMensajeExito] = useState(null); // Mensaje verde
-  const [datosBoleta, setDatosBoleta] = useState(null);   // Datos del carrito pagado
+  const navigate = useNavigate(); // 6. Inicializamos navigate
 
-  // 2. Leemos los datos que llegan desde PagoPaypal.jsx o NavBar.jsx
+  // 7. Obtenemos los productos y la funcion de agregar
+  const { productos, agregarAlCarrito } = useContext(PasteleriaContext);
+
+  // 8. Creamos una lista solo con los primeros 4 productos
+  const productosDestacados = productos.slice(0, 4);
+  
+  const [mensajeExito, setMensajeExito] = useState(null);
+  const [datosBoleta, setDatosBoleta] = useState(null);
+
   useEffect(() => {
-    // Verificamos si hay un mensaje general (ej: logout)
     if (location.state?.mensaje) {
       setMensajeExito(location.state.mensaje);
-      // Limpiamos despues de 5 segundos
       const timer = setTimeout(() => setMensajeExito(null), 5000);
       return () => clearTimeout(timer);
     }
     
-    // Verificamos si hay datos de boleta (pedido confirmado)
     if (location.state?.boleta) {
       setDatosBoleta(location.state.boleta);
-      setMensajeExito(location.state.mensaje || '¡Tu pedido ha sido confirmado!'); // Mensaje por defecto si no viene
-      
-      // IMPORTANTE: Limpiamos el state de la navegacion para que la boleta
-      // no reaparezca si el usuario navega a otra pagina y vuelve a Home.
+      setMensajeExito(location.state.mensaje || '¡Tu pedido ha sido confirmado!');
       window.history.replaceState({}, document.title) 
     }
-    
-  }, [location.state]); // Se ejecuta si location.state cambia
+  }, [location.state]);
 
-  // 3. Funcion para generar y descargar la boleta .txt
   const descargarBoleta = () => {
-    if (!datosBoleta) return; // Seguridad por si acaso
-
-    // Construimos el contenido del archivo .txt
+    // ... (la funcion de descargar boleta sigue igual)
+    if (!datosBoleta) return;
     let contenido = `--- BOLETA PASTELERIA MIL SABORES ---\n\n`;
     contenido += `Fecha: ${new Date().toLocaleDateString('es-CL')} ${new Date().toLocaleTimeString('es-CL')}\n`;
     contenido += `---------------------------------------\n\n`;
     contenido += `Productos:\n`;
-    
     datosBoleta.items.forEach(item => {
-      contenido += `- ${item.nombre} (x${item.cantidad}) : $${(item.precio * item.cantidad).toLocaleString('es-CL')}\n`;
+      const nombreCorto = item.nombre.length > 25 ? item.nombre.substring(0, 22) + '...' : item.nombre;
+      const lineaProducto = `${nombreCorto} (x${item.cantidad})`;
+      const lineaPrecio = `$${(item.precio * item.cantidad).toLocaleString('es-CL')}`;
+      contenido += alinearTexto(lineaProducto, lineaPrecio, 45) + '\n';
     });
-    
     contenido += `\n---------------------------------------\n`;
-    // Aqui podriamos añadir descuentos si los pasaramos desde PagoPaypal
-    contenido += `TOTAL PAGADO: $${datosBoleta.total.toLocaleString('es-CL')}\n\n`;
-    contenido += `¡Gracias por tu compra!\n`;
-    
-    // Creamos un elemento 'a' invisible para simular la descarga
+    contenido += alinearTexto('TOTAL PAGADO:', `$${datosBoleta.total.toLocaleString('es-CL')}`, 45) + '\n';
+    contenido += `---------------------------------------\n\n`;
+    contenido += `        ¡Gracias por tu compra!\n`;
+    contenido += `---------------------------------------\n`;
     const elemento = document.createElement('a');
     const archivo = new Blob([contenido], {type: 'text/plain;charset=utf-8'});
     elemento.href = URL.createObjectURL(archivo);
-    elemento.download = "boleta_pasteleria.txt"; // Nombre del archivo
-    document.body.appendChild(elemento); // Necesario para Firefox
+    elemento.download = "boleta_pasteleria.txt";
+    document.body.appendChild(elemento);
     elemento.click();
-    document.body.removeChild(elemento); // Limpiamos
+    document.body.removeChild(elemento);
+  };
+  
+  // Funcion auxiliar (la necesitamos aqui si la usamos en descargarBoleta)
+  const alinearTexto = (textoIzq, textoDer, anchoTotal) => {
+    const espaciosNecesarios = anchoTotal - textoIzq.length - textoDer.length;
+    const espacios = ' '.repeat(Math.max(0, espaciosNecesarios));
+    return textoIzq + espacios + textoDer;
   };
 
   return (
@@ -75,36 +80,36 @@ export default function Home() {
           className="display-3" 
           style={{ fontFamily: 'Pacifico, cursive', color: '#8B4513' }}
         >
+          {/* Corregido a "Mil" */}
           ¡Bienvenido a Mil Sabores!
         </h1>
+        {/* Corregidas tildes */}
         <p className="lead" style={{ color: '#5D4037' }}>
-          Celebrando 50 años de tradicion y dulzura.
+          Celebrando 50 anos de tradicion y dulzura.
         </p>
         <p style={{ color: '#5D4037' }}>
-          Descubre por qué somos un referente en la reposteria chilena.
+          Descubre por que somos un referente en la reposteria chilena.
         </p>
         <Button 
           as={Link} 
           to="/catalogo" 
           variant="secondary" 
           size="lg"
-          className  ="fw-bold"
-          
+          className="fw-bold"
         >
+          {/* Corregida tilde */}
           Ver Catalogo
         </Button>
       </Container>
       
-      {/* 4. Contenedor para mostrar mensajes y boton de boleta */}
+      {/* Contenedor para mostrar mensajes y boton de boleta */}
       <Container className="mt-4" style={{ maxWidth: '600px' }}>
-        {/* Mensaje de Exito (Logout o Pedido Confirmado) */}
         {mensajeExito && (
           <Alert variant="success" onClose={() => setMensajeExito(null)} dismissible>
             {mensajeExito}
           </Alert>
         )}
         
-        {/* Boton para Descargar Boleta (solo si hay datos de boleta) */}
         {datosBoleta && (
           <div className="text-center mt-3">
              <Button 
@@ -112,13 +117,39 @@ export default function Home() {
                onClick={descargarBoleta}
                className="fw-bold"
               >
-               Descargar Boleta (.txt)
+               Descargar Boleta
              </Button>
           </div>
         )}
+      </Container>
+
+      {/* --- 9. ¡NUEVA SECCION! Productos Destacados --- */}
+      <Container className="my-5">
+        <h2 
+          className="text-center mb-4" 
+          style={{ fontFamily: 'Pacifico, cursive', color: '#8B4513' }}
+        >
+          Nuestros Productos Destacados
+        </h2>
+        <Row className="justify-content-center g-4">
+          {productosDestacados.map((prod) => (
+            // Mostramos 4 por fila en desktop (lg-3), 2 en tablet (md-6)
+            <Col md={6} lg={3} key={prod.id} className="d-flex justify-content-center">
+              <Card
+                // Pasamos los props al componente Card
+                img={prod.img}
+                nombre={prod.nombre}
+                precio={prod.precio}
+                
+                // Creamos las funciones para los botones
+                verMas={() => navigate(`/producto/${prod.id}`)}
+                agregar={() => agregarAlCarrito(prod)}
+              />
+            </Col>
+          ))}
+        </Row>
       </Container>
       
     </div>
   );
 }
-
