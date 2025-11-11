@@ -1,9 +1,9 @@
 // ...existing code...
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 
 export const ContextoAutenticacion = createContext(null);
 
-// --- FUNCIONES AUXILIARES DE "ENCRIPTACION" (Base64) ---
+// --- Helpers ---
 const _empaquetarDatos = (datos) => {
   const { password, fechaNacimiento, telefono, codigoPromo } = datos;
   const datosSensibles = { password, fechaNacimiento, telefono, codigoPromo };
@@ -27,6 +27,18 @@ const convertirBase64 = (file) => {
     reader.onerror = (error) => reject(error);
   });
 };
+
+// --- PREDEFINED ADMINS (solo estos pueden ser administradores) ---
+// Ajusta email/password según necesites. Estas cuentas se "seedearán" al iniciar la app
+const PREDEFINED_ADMINS = [
+  {
+    nombre: 'Administrador',
+    email: 'admin@pasteleria.cl',
+    password: 'admin1234',
+    fotoPerfil: null,
+    rol: 'admin'
+  }
+];
 // ---------------------------------------------------
 
 export default function ProveedorAutenticacion({ children }) {
@@ -36,8 +48,6 @@ export default function ProveedorAutenticacion({ children }) {
 
     const usuarioGuardado = JSON.parse(savedUserJSON);
     const datosSensibles = _desempaquetarDatos(usuarioGuardado.datosSeguros);
-
-    // Restauramos el usuario combinando datos no sensibles + datos desempaquetados
     const { datosSeguros, ...rest } = usuarioGuardado;
     return { ...rest, ...datosSensibles };
   });
@@ -45,7 +55,6 @@ export default function ProveedorAutenticacion({ children }) {
   const [usuariosRegistrados, setUsuariosRegistrados] = useState(() => {
     const savedUsersJSON = localStorage.getItem('usuariosRegistrados');
     if (!savedUsersJSON) return [];
-
     const listaGuardada = JSON.parse(savedUsersJSON);
     return listaGuardada.map(u => {
       const datosSensibles = _desempaquetarDatos(u.datosSeguros);
@@ -55,6 +64,31 @@ export default function ProveedorAutenticacion({ children }) {
   });
 
   const [mensaje, setMensaje] = useState(null);
+
+  // Seed predefined admins if they are not in localStorage
+  useEffect(() => {
+    const existAdminEmails = new Set(usuariosRegistrados.map(u => u.email));
+    const adminsToAdd = PREDEFINED_ADMINS.filter(a => !existAdminEmails.has(a.email));
+    if (adminsToAdd.length === 0) return;
+
+    const nuevos = [...usuariosRegistrados, ...adminsToAdd];
+    // Guardar en formato protegido (datosSeguros)
+    const listaParaGuardar = nuevos.map(u => {
+      const datosSeguros = _empaquetarDatos(u);
+      return {
+        nombre: u.nombre,
+        email: u.email,
+        fotoPerfil: u.fotoPerfil,
+        rol: u.rol,
+        datosSeguros
+      };
+    });
+
+    setUsuariosRegistrados(nuevos);
+    localStorage.setItem('usuariosRegistrados', JSON.stringify(listaParaGuardar));
+    // No forzamos login; solo agregamos las cuentas admin disponibles
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ejecutar solo al montar
 
   // --- FUNCION INTERNA PARA GUARDAR CAMBIOS ---
   const _guardarActualizacion = (usuarioActualizado) => {
@@ -118,19 +152,10 @@ export default function ProveedorAutenticacion({ children }) {
       ...datosUsuario,
       telefono: datosUsuario.telefono ?? '',
       fotoPerfil: datosUsuario.fotoPerfil ?? null,
-      rol: 'cliente' // rol por defecto
+      rol: 'cliente' // siempre cliente al registrarse
     };
 
     const nuevosUsuarios = [...usuariosRegistrados, nuevoUsuario];
-
-    const datosSeguros = _empaquetarDatos(nuevoUsuario);
-    const usuarioParaGuardar = {
-      nombre: nuevoUsuario.nombre,
-      email: nuevoUsuario.email,
-      fotoPerfil: nuevoUsuario.fotoPerfil,
-      rol: nuevoUsuario.rol,
-      datosSeguros: datosSeguros
-    };
 
     const listaParaGuardar = nuevosUsuarios.map(u => {
       const datosSeguros = _empaquetarDatos(u);
@@ -139,13 +164,22 @@ export default function ProveedorAutenticacion({ children }) {
         email: u.email,
         fotoPerfil: u.fotoPerfil,
         rol: u.rol,
-        datosSeguros: datosSeguros
+        datosSeguros
       };
     });
 
     setUsuariosRegistrados(nuevosUsuarios);
     setUsuario(nuevoUsuario);
     localStorage.setItem('usuariosRegistrados', JSON.stringify(listaParaGuardar));
+
+    const datosSeguros = _empaquetarDatos(nuevoUsuario);
+    const usuarioParaGuardar = {
+      nombre: nuevoUsuario.nombre,
+      email: nuevoUsuario.email,
+      fotoPerfil: nuevoUsuario.fotoPerfil,
+      rol: nuevoUsuario.rol,
+      datosSeguros
+    };
     localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
 
     return true;
@@ -161,13 +195,6 @@ export default function ProveedorAutenticacion({ children }) {
     if (usuarioEncontrado) {
       const usuarioConRol = { ...usuarioEncontrado };
 
-      // Asigna rol admin si coincide el email (ajusta según tu necesidad)
-      if (usuarioConRol.email === 'admin@pasteleria.com') {
-        usuarioConRol.rol = 'admin';
-      } else {
-        usuarioConRol.rol = usuarioConRol.rol ?? 'cliente';
-      }
-
       const datosSeguros = _empaquetarDatos(usuarioConRol);
       const usuarioParaGuardar = {
         nombre: usuarioConRol.nombre,
@@ -179,6 +206,11 @@ export default function ProveedorAutenticacion({ children }) {
 
       setUsuario(usuarioConRol);
       localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
+
+      // Mensaje de éxito y limpieza automática
+      setMensaje('Sesión iniciada correctamente.');
+      setTimeout(() => setMensaje(null), 2000);
+
       return true;
     }
 

@@ -1,70 +1,72 @@
-import { useState, useContext, useEffect } from 'react';
-import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
-// 1. Importamos useNavigate
-import { useNavigate } from 'react-router-dom';
-// 2. Importamos nuestro contexto
-import { ContextoAutenticacion } from '../context/ContextoAutenticacion';
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { ContextoAutenticacion } from "../context/ContextoAutenticacion";
+import { Container, Form, Button, Alert, Row, Col } from "react-bootstrap";
 
 export default function Login() {
-  // 3. Obtenemos las funciones y mensajes del contexto
-  const { iniciarSesion, mensaje, limpiarMensaje } = useContext(ContextoAutenticacion);
   const navigate = useNavigate();
+  const { iniciarSesion, mensaje, limpiarMensaje } = useContext(ContextoAutenticacion);
 
-  // 4. Estados locales para el formulario
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  
-  // 5. Estado local para el mensaje de ÉXITO
-  const [exito, setExito] = useState(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [alertLocal, setAlertLocal] = useState(null);
 
-  // 6. Limpiamos los mensajes de error cuando el componente se carga/desmonta
   useEffect(() => {
-    // Limpia el mensaje de error del contexto al cargar la página
-    limpiarMensaje();
-    // Limpia el mensaje de error cuando el usuario sale de esta página
-    return () => {
-      limpiarMensaje();
-    };
+    // Limpia el mensaje de error cuando el componente se desmonta
+    return () => limpiarMensaje();
   }, [limpiarMensaje]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setExito(null); // Limpiamos mensajes de éxito previos
-    limpiarMensaje(); // Limpiamos mensajes de error previos
+    setAlertLocal(null);
+    const mail = (email || "").trim();
+    const pass = (password || "").trim();
+    if (!mail || !pass) {
+      setAlertLocal({ variant: "warning", text: "Completa email y contraseña." });
+      return;
+    }
 
-    // 7. Llamamos a iniciarSesion y comprobamos el resultado
-    const inicioExitoso = iniciarSesion(email, password);
+    const ok = iniciarSesion(mail, pass);
+    if (ok) {
+      // leer el usuario guardado (el contexto guarda en localStorage)
+      const saved = JSON.parse(localStorage.getItem("usuarioLogueado") || "null");
+      const rol = saved?.rol ?? "cliente";
 
-    if (inicioExitoso) {
-      // 8. Mostramos un mensaje verde de éxito
-      setExito({ tipo: 'success', texto: '¡Inicio de sesión exitoso! Redirigiendo...' });
-      
-      // Redirigimos al catálogo después de 2 segundos
-      setTimeout(() => {
-        navigate('/catalogo');
-      }, 2000);
+      setAlertLocal({ variant: "success", text: "Inicio de sesión correcto." });
 
-    } 
-    // Si (inicioExitoso === false), el contexto ya ha establecido el 'mensaje' de error
-    // y se mostrará automáticamente (ver JSX abajo).
+      // redirigir según rol
+      if (rol === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+      return;
+    }
+
+    // iniciarSesion establece mensaje en el contexto; mostrarlo localmente si existe
+    if (mensaje) {
+      setAlertLocal({ variant: "danger", text: mensaje });
+    } else {
+      setAlertLocal({ variant: "danger", text: "No se pudo iniciar sesión." });
+    }
   };
 
   return (
-    <Container className="my-5">
+    <Container style={{ maxWidth: 520 }} className="my-4">
       <Row className="justify-content-md-center">
         <Col md={6}>
-          <h2 style={{ fontFamily: 'Pacifico, cursive' }} className="text-center mb-4">
+          <h2 style={{ fontFamily: "Pacifico, cursive" }} className="text-center mb-4">
             Iniciar Sesión
           </h2>
-          
+
           {/* 9. Mostramos el mensaje de ÉXITO (local) */}
-          {exito && <Alert variant={exito.tipo}>{exito.texto}</Alert>}
+          {alertLocal && <Alert variant={alertLocal.variant}>{alertLocal.text}</Alert>}
 
           {/* 10. Mostramos el mensaje de ERROR (del Contexto) */}
-          {mensaje && <Alert variant="danger">{mensaje}</Alert>}
+          {mensaje && !alertLocal && <Alert variant="danger">{mensaje}</Alert>}
 
           <Form onSubmit={handleSubmit} className="p-4 bg-light rounded shadow-sm">
-            <Form.Group className="mb-3" controlId="formEmail">
+            <Form.Group className="mb-3" controlId="loginEmail">
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="email"
@@ -75,7 +77,7 @@ export default function Login() {
               />
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="formPassword">
+            <Form.Group className="mb-3" controlId="loginPassword">
               <Form.Label>Contraseña</Form.Label>
               <Form.Control
                 type="password"
@@ -86,8 +88,7 @@ export default function Login() {
               />
             </Form.Group>
 
-            {/* Deshabilitamos el botón si el inicio de sesión fue exitoso */}
-            <Button variant="secondary" type="submit" className="w-100 fw-bold" disabled={exito?.tipo === 'success'}>
+            <Button type="submit" className="w-100 fw-bold">
               Ingresar
             </Button>
           </Form>
