@@ -1,20 +1,21 @@
 import { useContext } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Navbar, Nav, Container, Button, Image } from 'react-bootstrap';
+// 1. Ya no necesitamos 'useNavigate' ni 'Button' aqui
+import { NavLink } from 'react-router-dom';
+import { Navbar, Nav, Container, Image } from 'react-bootstrap';
 // Importamos ambos contextos
 import { ContextoAutenticacion } from '../context/ContextoAutenticacion';
 import { PasteleriaContext } from '../context/PasteleriaContext';
 
 export default function NavBar() {
-  const { usuario, cerrarSesion } = useContext(ContextoAutenticacion);
+  // 2. Ya no necesitamos 'cerrarSesion' aqui
+  const { usuario } = useContext(ContextoAutenticacion);
   const { total } = useContext(PasteleriaContext);
-  const navigate = useNavigate();
 
-  const handleCerrarSesion = () => {
-    cerrarSesion();
-    navigate('/', { state: { mensaje: 'Has cerrado sesion exitosamente.' } });
-  };
-
+  // 3. Funcion para estilos activos/inactivos (usando la clase CSS)
+  const activeClassName = ({ isActive }) => (
+    isActive ? 'nav-link-custom active' : 'nav-link-custom' 
+  );
+  
   return (
     <Navbar 
       expand="lg" 
@@ -36,7 +37,7 @@ export default function NavBar() {
             <Nav.Link 
               as={NavLink} 
               to="/" 
-              className={({isActive}) => `nav-link-custom ${isActive ? 'active' : ''}`} 
+              className={activeClassName} 
               end
             >
               Home
@@ -44,90 +45,97 @@ export default function NavBar() {
             <Nav.Link 
               as={NavLink} 
               to="/catalogo" 
-              className={({isActive}) => `nav-link-custom ${isActive ? 'active' : ''}`}
+              className={activeClassName}
             >
               Catalogo
             </Nav.Link>
             <Nav.Link 
               as={NavLink} 
               to="/sobre-nosotros" 
-              className={({isActive}) => `nav-link-custom ${isActive ? 'active' : ''}`}
+              className={activeClassName}
             >
               Sobre Nosotros
             </Nav.Link>
             <Nav.Link 
               as={NavLink} 
               to="/contacto" 
-              className={({isActive}) => `nav-link-custom ${isActive ? 'active' : ''}`}
+              className={activeClassName}
             >
               Contacto
             </Nav.Link>
             
-            {/* --- LINKS DE LA DERECHA (con logica de usuario) --- */}
+            {/* --- LINK DE ADMIN (CONDICIONAL) --- */}
+            {usuario && usuario.rol === 'ADMIN' && (
+              <Nav.Link 
+                as={NavLink} 
+                to="/admin" // Ruta base del panel de admin
+                className={activeClassName}
+              >
+                Panel Admin
+              </Nav.Link>
+            )}
+
+            
+            {/* --- LINKS DE LA DERECHA --- */}
             {usuario ? (
-              // --- VISTA SI ESTÁ LOGUEADO ---
-              // Añadimos 'ms-lg-auto' para empujar todo este bloque a la derecha en desktop
-              // Y 'align-items-center' para centrar verticalmente los items del usuario/boton
-              <div className="d-flex align-items-center ms-lg-auto mt-2 mt-lg-0">
+              // --- VISTA LOGUEADO ---
+              // Usamos d-flex para alinear horizontalmente en desktop
+              // ms-lg-auto empuja todo este grupo a la derecha en desktop
+              <div className="d-lg-flex align-items-center ms-lg-auto mt-2 mt-lg-0">
                 <Nav.Link 
                   as={NavLink} 
                   to="/carrito" 
-                  className={({isActive}) => `nav-link-custom me-3 ${isActive ? 'active' : ''}`}
+                  className={activeClassName}
                 >
                   🛒 Carrito (${total.toLocaleString('es-CL')})
                 </Nav.Link>
                 
-                <Button 
-                  variant="outline-light" 
-                  size="sm" 
-                  onClick={handleCerrarSesion} 
-                  className="me-3" // Margen a la derecha del boton
-                >
-                  Cerrar Sesion
-                </Button>
+                {/* 4. BOTON "CERRAR SESION" YA NO ESTA AQUI */}
 
+                {/* 5. Link de Perfil */}
                 <Nav.Link 
                   as={NavLink} 
                   to="/mi-perfil" 
-                  className={({isActive}) => `nav-link-custom d-flex flex-column align-items-center px-lg-2 ${isActive ? 'active' : ''}`}
+                  // Margen a la izquierda en desktop
+                  className={`${activeClassName} d-flex flex-column align-items-center mt-2 mt-lg-0 ms-lg-2`}
                   title="Ir a Mi Perfil" 
                 >
                   <Image
                     src={usuario.fotoPerfil || 'https://placehold.co/30x30/FFF5E1/5D4037?text=Perfil'}
                     roundedCircle
                     style={{ width: '30px', height: '30px', objectFit: 'cover' }}
-                    className="mb-1" // Margen abajo
+                    className="mb-1"
                   />
-                  {/* --- ¡CAMBIO AQUI! --- Color blanco forzado */}
-                  <span style={{ fontSize: '0.75rem', color: 'white' }}>{usuario.nombre}</span>
+                  {/* 6. Nombre con color blanco forzado */}
+                  <span className="text-white" style={{ fontSize: '0.75rem' }}>{usuario.nombre}</span>
                 </Nav.Link>
-                
               </div>
             ) : (
-              // --- VISTA SI NO ESTÁ LOGUEADO ---
-              <>
+              // --- VISTA NO LOGUEADO ---
+              // Usamos ms-lg-auto para empujar este grupo a la derecha en desktop
+              <div className="d-lg-flex align-items-center ms-lg-auto mt-2 mt-lg-0">
                 <Nav.Link 
                   as={NavLink} 
                   to="/carrito" 
-                  className={({isActive}) => `nav-link-custom ms-lg-auto ${isActive ? 'active' : ''}`}
+                  className={activeClassName}
                 >
                   🛒 Carrito (${total.toLocaleString('es-CL')})
                 </Nav.Link>
                 <Nav.Link 
                   as={NavLink} 
                   to="/login" 
-                  className={({isActive}) => `nav-link-custom ${isActive ? 'active' : ''}`}
+                  className={activeClassName}
                 >
                   Iniciar Sesion
                 </Nav.Link>
                 <Nav.Link 
                   as={NavLink} 
                   to="/registro" 
-                  className={({isActive}) => `nav-link-custom ${isActive ? 'active' : ''}`}
+                  className={activeClassName}
                 >
                   Registrate
                 </Nav.Link>
-              </>
+              </div>
             )}
           </Nav>
         </Navbar.Collapse>
@@ -135,4 +143,3 @@ export default function NavBar() {
     </Navbar>
   );
 }
-

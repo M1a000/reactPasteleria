@@ -1,17 +1,15 @@
-import { useEffect, useState, useContext } from 'react'; // 1. Importamos useContext
-import { Link, useLocation, useNavigate } from 'react-router-dom'; // 2. Importamos useNavigate
-import { Container, Button, Alert, Row, Col } from 'react-bootstrap'; // 3. Importamos Row y Col
-import { PasteleriaContext } from '../context/PasteleriaContext'; // 4. Importamos el Contexto
-import Card from '../components/Card'; // 5. Importamos la Tarjeta
+import { useEffect, useState, useContext } from 'react'; 
+import { Link, useLocation, useNavigate } from 'react-router-dom'; 
+import { Container, Button, Alert, Row, Col, Image } from 'react-bootstrap'; 
+import { PasteleriaContext } from '../context/PasteleriaContext'; 
+import Card from '../components/Card'; 
 
 export default function Home() {
   const location = useLocation();
-  const navigate = useNavigate(); // 6. Inicializamos navigate
+  const navigate = useNavigate(); 
 
-  // 7. Obtenemos los productos y la funcion de agregar
   const { productos, agregarAlCarrito } = useContext(PasteleriaContext);
 
-  // 8. Creamos una lista solo con los primeros 4 productos
   const productosDestacados = productos.slice(0, 4);
   
   const [mensajeExito, setMensajeExito] = useState(null);
@@ -32,7 +30,6 @@ export default function Home() {
   }, [location.state]);
 
   const descargarBoleta = () => {
-    // ... (la funcion de descargar boleta sigue igual)
     if (!datosBoleta) return;
     let contenido = `--- BOLETA PASTELERIA MIL SABORES ---\n\n`;
     contenido += `Fecha: ${new Date().toLocaleDateString('es-CL')} ${new Date().toLocaleTimeString('es-CL')}\n`;
@@ -58,7 +55,7 @@ export default function Home() {
     document.body.removeChild(elemento);
   };
   
-  // Funcion auxiliar (la necesitamos aqui si la usamos en descargarBoleta)
+  // Funcion auxiliar
   const alinearTexto = (textoIzq, textoDer, anchoTotal) => {
     const espaciosNecesarios = anchoTotal - textoIzq.length - textoDer.length;
     const espacios = ' '.repeat(Math.max(0, espaciosNecesarios));
@@ -67,25 +64,37 @@ export default function Home() {
 
   return (
     <div>
-      {/* Seccion de Bienvenida (Hero) */}
+      {/* --- ¡CAMBIO AQUI! --- */}
+      {/* 1. Contenedor del Banner (full width, sin padding) */}
       <Container 
         fluid 
-        className="text-center p-5" 
+        className="text-center p-0" 
         style={{ 
           backgroundColor: '#FFF5E1', 
-          borderBottom: '2px solid #8B4513'
+          borderBottom: ' #8B4513',
+          
         }}
+      >
+        <Image
+          src="/bannerPasteleria.png"
+          alt="Banner Pasteleria Mil Sabores"
+          fluid // Responsiva
+        />
+      </Container>
+      
+      {/* 2. Contenedor del Texto de Bienvenida (con padding) */}
+      <Container 
+        className="text-center p-5"
+        style={{ backgroundColor: '#FFF5E1' }} // Mismo fondo crema
       >
         <h1 
           className="display-3" 
           style={{ fontFamily: 'Pacifico, cursive', color: '#8B4513' }}
         >
-          {/* Corregido a "Mil" */}
           ¡Bienvenido a Mil Sabores!
         </h1>
-        {/* Corregidas tildes */}
         <p className="lead" style={{ color: '#5D4037' }}>
-          Celebrando 50 anos de tradicion y dulzura.
+          Celebrando 50 años de tradicion y dulzura.
         </p>
         <p style={{ color: '#5D4037' }}>
           Descubre por que somos un referente en la reposteria chilena.
@@ -93,16 +102,15 @@ export default function Home() {
         <Button 
           as={Link} 
           to="/catalogo" 
-          variant="secondary" 
+          variant="primary" // Boton Rosa
           size="lg"
-          className="fw-bold"
+          className="fw-bold" 
         >
-          {/* Corregida tilde */}
           Ver Catalogo
         </Button>
       </Container>
       
-      {/* Contenedor para mostrar mensajes y boton de boleta */}
+      {/* Contenedor para mostrar mensajes y boton de boleta (SIN CAMBIOS) */}
       <Container className="mt-4" style={{ maxWidth: '600px' }}>
         {mensajeExito && (
           <Alert variant="success" onClose={() => setMensajeExito(null)} dismissible>
@@ -123,7 +131,7 @@ export default function Home() {
         )}
       </Container>
 
-      {/* --- 9. ¡NUEVA SECCION! Productos Destacados --- */}
+      {/* Seccion Productos Destacados (SIN CAMBIOS) */}
       <Container className="my-5">
         <h2 
           className="text-center mb-4" 
@@ -133,15 +141,11 @@ export default function Home() {
         </h2>
         <Row className="justify-content-center g-4">
           {productosDestacados.map((prod) => (
-            // Mostramos 4 por fila en desktop (lg-3), 2 en tablet (md-6)
             <Col md={6} lg={3} key={prod.id} className="d-flex justify-content-center">
               <Card
-                // Pasamos los props al componente Card
                 img={prod.img}
                 nombre={prod.nombre}
                 precio={prod.precio}
-                
-                // Creamos las funciones para los botones
                 verMas={() => navigate(`/producto/${prod.id}`)}
                 agregar={() => agregarAlCarrito(prod)}
               />

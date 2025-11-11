@@ -1,23 +1,26 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
-import './index.css';
+
+// --- ¡CAMBIO IMPORTANTE AQUI! ---
+// 1. Importamos Bootstrap PRIMERO (los estilos base)
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-// 1. Importamos el Router
-import { BrowserRouter } from 'react-router-dom';
+// 2. Importamos TUS estilos DESPUES (para que sobrescriban a Bootstrap)
+import './index.css'; 
 
-// 2. Importamos AMBOS proveedores
+// El resto de las importaciones
+import { BrowserRouter } from 'react-router-dom';
 import PasteleriaProvider from './context/PasteleriaContext.jsx';
 import ProveedorAutenticacion from './context/ContextoAutenticacion.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      {/* 3. ¡LA SOLUCIÓN! Envolvemos la App con AMBOS proveedores */}
-      {/* El de Autenticación primero (más general) */}
+      {/* 3. ¡LA SOLUCION! Envolvemos la App con AMBOS proveedores */}
+      {/* El de Autenticacion primero (mas general) */}
       <ProveedorAutenticacion>
-        {/* El de la Pastelería después (depende del otro) */}
+        {/* El de la Pasteleria despues (depende del otro) */}
         <PasteleriaProvider>
           <App />
         </PasteleriaProvider>
@@ -25,4 +28,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </React.StrictMode>,
 )
-

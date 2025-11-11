@@ -38,10 +38,10 @@ export default function Contacto() {
       <Row className="justify-content-md-center">
         <Col md={8} lg={6}>
           <h2 style={{ fontFamily: 'Pacifico, cursive' }} className="text-center mb-4">
-            Contactanos
+            Contáctanos
           </h2>
           <p className="text-center text-muted mb-4">
-            ¿Tienes alguna duda o un pedido especial? Escribenos.
+            ¿Tienes alguna duda o un pedido especial? Escríbenos.
           </p>
 
           <Form onSubmit={handleSubmit} className="p-4 bg-light rounded shadow-sm">
@@ -76,7 +76,7 @@ export default function Contacto() {
               <Form.Control
                 as="textarea"
                 rows={5}
-                placeholder="Escribe tu consulta aqui..."
+                placeholder="Escribe tu consulta aquí..."
                 value={mensaje}
                 onChange={(e) => setMensaje(e.target.value)}
                 required

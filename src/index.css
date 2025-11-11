@@ -17,63 +17,87 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   color: #B0BEC5 !important;
 }
 
-/* --- ESTILOS DE BOTONES --- */
+/* --- ¡CAMBIO AQUI! ESTILOS DE BOTONES --- */
+
+/* 1. Boton Primario (Rosa Suave) */
 .btn-primary {
-  background-color: #FFC0CB;
-  border-color: #FFC0CB;
-  color: #5D4037;
+  background-color: #FFC0CB; /* Rosa Suave */
+  border-color: #FFC0CB; /* Rosa Suave */
+  color: #5D4037 !important; /* Texto Marron Oscuro (para contraste) */
+}
+.btn-primary:hover {
+  background-color: #f7b5c3; /* Rosa Suave mas oscuro */
+  border-color: #f7b5c3;
+  color: #5D4037 !important;
+  opacity: 1; 
 }
 
-.btn-secondary {
-  background-color: #FFC0CB;
-  border-color: #8B4000;
-}
-
-.btn-success {
-  background-color: #FFC0CB;
-  border-color: #FFC0CB;
-  color: #5D4037;
-}
-
+/* 2. Boton Secundario (Chocolate) */
+.btn-secondary,
+.btn-success,
 .btn-danger {
-  background-color: #8B4000;
-  border-color: #8B4000;
+  background-color: #8B4513; /* Chocolate */
+  border-color: #8B4513; /* Chocolate */
+  color: white !important; /* Texto Blanco */
+}
+.btn-secondary:hover,
+.btn-success:hover,
+.btn-danger:hover {
+  background-color: #a0521f; /* Chocolate mas claro */
+  border-color: #a0521f;
+  color: white !important;
+  opacity: 1; 
 }
 
-.btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-danger:hover {
-  opacity: 0.8;
+/* 3. Botones Outline (Borde) */
+.btn-outline-primary {
+  color: #FFC0CB; /* Texto Rosa */
+  border-color: #FFC0CB; /* Borde Rosa */
+}
+.btn-outline-primary:hover {
+  background-color: #FFC0CB;
+  border-color: #FFC0CB;
+  color: #5D4037; /* Texto Marron */
 }
 
-/* --- ESTILOS DE NAVBAR LINKS (LA SOLUCION) --- */
+.btn-outline-secondary {
+  color: #8B4513; /* Texto Chocolate */
+  border-color: #8B4513; /* Borde Chocolate */
+}
+.btn-outline-secondary:hover {
+  background-color: #8B4513;
+  border-color: #8B4513;
+  color: white; /* Texto Blanco */
+}
 
-/* 1. Estilo INACTIVO (Opaco) */
-/* Lo hacemos mas especifico para ganar a Bootstrap */
+
+/* 5. Boton de Pagar PayPal (Lo dejamos con sus colores) */
+.btn-paypal {
+  background-color: #ffc439 !important;
+  border-color: #ffc439 !important;
+  color: #003087 !important;
+}
+
+
+/* --- ESTILOS DE NAVBAR LINKS --- */
 .navbar-nav .nav-link-custom {
   color: white !important;
-  opacity: 0.75; /* Opacidad al 75% */
+  opacity: 0.75; 
   font-weight: normal;
   text-decoration: none;
-  /* Transicion suave */
   transition: opacity 0.2s ease, color 0.2s ease, text-decoration 0.2s ease;
 }
-
-/* 2. Estilo ACTIVO (Subrayado, Fuerte) */
 .navbar-nav .nav-link-custom.active {
   opacity: 1;
   font-weight: bold;
   text-decoration: underline;
-  color: white !important; /* Aseguramos que siga blanco */
+  color: white !important; 
 }
-
-/* 3. Estilo HOVER (Rosado, Fuerte) */
-/* Tambien aplica al link activo */
 .navbar-nav .nav-link-custom:hover,
 .navbar-nav .nav-link-custom.active:hover {
   opacity: 1;
-  color: #FFC0CB !important; /* El color Rosa Suave que te gusta */
+  color: #FFC0CB !important; /* Rosa Suave */
 }
-
-/* 4. Aseguramos que los links de la Navbar (blancos) no se pongan marrones */
 .navbar-brand, .navbar-text {
   color: white !important;
 }
@@ -94,4 +118,3 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   object-fit: cover;
   width: 100%;
 }
-
