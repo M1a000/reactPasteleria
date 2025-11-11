@@ -1,7 +1,7 @@
-import { useContext } from 'react'; // <-- ¡CORREGIDO!
-import { Navigate, NavLink } from 'react-router-dom'; // Importamos NavLink
-import { ContextoAutenticacion } from '../../context/ContextoAutenticacion';
-import { Container, Row, Col, Card, Nav } from 'react-bootstrap';
+import { useContext } from "react";
+import { Navigate, NavLink } from "react-router-dom";
+import { ContextoAutenticacion } from "../context/ContextoAutenticacion";
+import { Container, Row, Col, Card, Nav } from "react-bootstrap";
 
 // Este es el layout principal del panel de admin
 export default function AdminDashboard() {

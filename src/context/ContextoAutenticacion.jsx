@@ -1,25 +1,24 @@
-import { createContext, useState } from 'react';
+// ...existing code...
+import { createContext, useState, useContext } from 'react';
 
-export const ContextoAutenticacion = createContext();
+export const ContextoAutenticacion = createContext(null);
 
 // --- FUNCIONES AUXILIARES DE "ENCRIPTACION" (Base64) ---
-
-// Esta funcion toma los datos sensibles y los convierte en un string Base64
 const _empaquetarDatos = (datos) => {
   const { password, fechaNacimiento, telefono, codigoPromo } = datos;
   const datosSensibles = { password, fechaNacimiento, telefono, codigoPromo };
-  // btoa() = "Binary to ASCII" -> Codifica a Base64
   return btoa(JSON.stringify(datosSensibles));
 };
 
-// Esta funcion toma el string Base64 y lo vuelve a convertir en un objeto
 const _desempaquetarDatos = (datosBase64) => {
-  if (!datosBase64) return {}; // Si no hay datos, devuelve objeto vacio
-  // atob() = "ASCII to Binary" -> Decodifica desde Base64
-  return JSON.parse(atob(datosBase64));
+  if (!datosBase64) return {};
+  try {
+    return JSON.parse(atob(datosBase64));
+  } catch {
+    return {};
+  }
 };
 
-// Funcion para convertir imagen (la dejamos igual)
 const convertirBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -30,82 +29,74 @@ const convertirBase64 = (file) => {
 };
 // ---------------------------------------------------
 
-
 export default function ProveedorAutenticacion({ children }) {
-  
-  // --- Estados de Autenticacion ---
   const [usuario, setUsuario] = useState(() => {
     const savedUserJSON = localStorage.getItem('usuarioLogueado');
     if (!savedUserJSON) return null;
-    
-    // 1. Leemos el usuario "empaquetado" de localStorage
+
     const usuarioGuardado = JSON.parse(savedUserJSON);
-    // 2. "Desempaquetamos" los datos sensibles y los unimos al objeto
     const datosSensibles = _desempaquetarDatos(usuarioGuardado.datosSeguros);
-    
-    // Retornamos el objeto de usuario completo (desempaquetado)
-    return { ...usuarioGuardado, ...datosSensibles };
+
+    // Restauramos el usuario combinando datos no sensibles + datos desempaquetados
+    const { datosSeguros, ...rest } = usuarioGuardado;
+    return { ...rest, ...datosSensibles };
   });
 
   const [usuariosRegistrados, setUsuariosRegistrados] = useState(() => {
     const savedUsersJSON = localStorage.getItem('usuariosRegistrados');
     if (!savedUsersJSON) return [];
-    
-    // Hacemos lo mismo para la lista de todos los usuarios
+
     const listaGuardada = JSON.parse(savedUsersJSON);
     return listaGuardada.map(u => {
       const datosSensibles = _desempaquetarDatos(u.datosSeguros);
-      return { ...u, ...datosSensibles };
+      const { datosSeguros, ...rest } = u;
+      return { ...rest, ...datosSensibles };
     });
   });
 
   const [mensaje, setMensaje] = useState(null);
 
-
   // --- FUNCION INTERNA PARA GUARDAR CAMBIOS ---
   const _guardarActualizacion = (usuarioActualizado) => {
-    // 1. "Empaquetamos" los datos sensibles
     const datosSeguros = _empaquetarDatos(usuarioActualizado);
 
-    // 2. Creamos el objeto que se guardara en localStorage
-    // (sin los datos sensibles, solo con el paquete)
     const usuarioParaGuardar = {
       nombre: usuarioActualizado.nombre,
       email: usuarioActualizado.email,
       fotoPerfil: usuarioActualizado.fotoPerfil,
-      datosSeguros: datosSeguros // <-- El string "encriptado"
+      rol: usuarioActualizado.rol,
+      datosSeguros: datosSeguros
     };
 
-    // 3. Actualiza el estado de React (con el objeto completo)
     setUsuario(usuarioActualizado);
-    // 4. Actualiza el localStorage de la sesion (con el objeto empaquetado)
     localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
-    
-    // 5. Actualiza la lista completa de usuarios registrados
-    const emailOriginal = usuario.email; 
-    const listaActualizada = usuariosRegistrados.map(u => 
+
+    const emailOriginal = usuario?.email ?? usuarioActualizado.email;
+    const listaActualizada = usuariosRegistrados.map(u =>
       (u.email === emailOriginal) ? usuarioActualizado : u
     );
-    
-    // 6. "Empaquetamos" la lista antes de guardarla
+
     const listaParaGuardar = listaActualizada.map(u => {
       const datosSeguros = _empaquetarDatos(u);
       return {
         nombre: u.nombre,
         email: u.email,
         fotoPerfil: u.fotoPerfil,
+        rol: u.rol,
         datosSeguros: datosSeguros
       };
     });
-    
-    setUsuariosRegistrados(listaActualizada); // Estado de React (completo)
-    localStorage.setItem('usuariosRegistrados', JSON.stringify(listaParaGuardar)); // localStorage (empaquetado)
+
+    setUsuariosRegistrados(listaActualizada);
+    localStorage.setItem('usuariosRegistrados', JSON.stringify(listaParaGuardar));
   };
 
   // --- FUNCION INTERNA PARA VALIDAR PASSWORD ---
-  // (Esta funcion no cambia, porque opera sobre el estado de React,
-  // que ya esta "desempaquetado")
   const validarPassword = (passwordActual) => {
+    if (!usuario) {
+      setMensaje('Error: No hay usuario logueado.');
+      return false;
+    }
     if (usuario.password !== passwordActual) {
       setMensaje('Error: La contraseña actual es incorrecta.');
       return false;
@@ -114,74 +105,80 @@ export default function ProveedorAutenticacion({ children }) {
     return true;
   };
 
-
-  // --- Funciones de Autenticacion (Modificadas) ---
-
+  // --- Funciones de Autenticacion ---
   const registrarUsuario = (datosUsuario) => {
     setMensaje(null);
-    
-    // Buscamos en la lista (desempaquetada)
+
     if (usuariosRegistrados.find(u => u.email === datosUsuario.email)) {
       setMensaje('Error: El email ya está registrado.');
-      return false; 
+      return false;
     }
 
-    const nuevoUsuario = { 
-      ...datosUsuario, 
-      telefono: '', 
-      fotoPerfil: null 
+    const nuevoUsuario = {
+      ...datosUsuario,
+      telefono: datosUsuario.telefono ?? '',
+      fotoPerfil: datosUsuario.fotoPerfil ?? null,
+      rol: 'cliente' // rol por defecto
     };
-    
+
     const nuevosUsuarios = [...usuariosRegistrados, nuevoUsuario];
-    
-    // Empaquetamos el usuario nuevo antes de guardarlo
+
     const datosSeguros = _empaquetarDatos(nuevoUsuario);
     const usuarioParaGuardar = {
       nombre: nuevoUsuario.nombre,
       email: nuevoUsuario.email,
       fotoPerfil: nuevoUsuario.fotoPerfil,
+      rol: nuevoUsuario.rol,
       datosSeguros: datosSeguros
     };
 
-    // Empaquetamos la lista nueva antes de guardarla
     const listaParaGuardar = nuevosUsuarios.map(u => {
       const datosSeguros = _empaquetarDatos(u);
       return {
         nombre: u.nombre,
         email: u.email,
         fotoPerfil: u.fotoPerfil,
+        rol: u.rol,
         datosSeguros: datosSeguros
       };
     });
 
-    setUsuariosRegistrados(nuevosUsuarios); // Estado React
-    setUsuario(nuevoUsuario); // Estado React
-    localStorage.setItem('usuariosRegistrados', JSON.stringify(listaParaGuardar)); // localStorage
-    localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar)); // localStorage
-    
+    setUsuariosRegistrados(nuevosUsuarios);
+    setUsuario(nuevoUsuario);
+    localStorage.setItem('usuariosRegistrados', JSON.stringify(listaParaGuardar));
+    localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
+
     return true;
   };
 
   const iniciarSesion = (email, password) => {
     setMensaje(null);
 
-    // Buscamos en la lista (desempaquetada)
     const usuarioEncontrado = usuariosRegistrados.find(
       (u) => u.email === email && u.password === password
     );
 
     if (usuarioEncontrado) {
-      // Empaquetamos antes de guardar en la sesion
-      const datosSeguros = _empaquetarDatos(usuarioEncontrado);
+      const usuarioConRol = { ...usuarioEncontrado };
+
+      // Asigna rol admin si coincide el email (ajusta según tu necesidad)
+      if (usuarioConRol.email === 'admin@pasteleria.com') {
+        usuarioConRol.rol = 'admin';
+      } else {
+        usuarioConRol.rol = usuarioConRol.rol ?? 'cliente';
+      }
+
+      const datosSeguros = _empaquetarDatos(usuarioConRol);
       const usuarioParaGuardar = {
-        nombre: usuarioEncontrado.nombre,
-        email: usuarioEncontrado.email,
-        fotoPerfil: usuarioEncontrado.fotoPerfil,
+        nombre: usuarioConRol.nombre,
+        email: usuarioConRol.email,
+        fotoPerfil: usuarioConRol.fotoPerfil,
+        rol: usuarioConRol.rol,
         datosSeguros: datosSeguros
       };
 
-      setUsuario(usuarioEncontrado); // Estado React
-      localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar)); // localStorage
+      setUsuario(usuarioConRol);
+      localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
       return true;
     }
 
@@ -199,32 +196,23 @@ export default function ProveedorAutenticacion({ children }) {
     setMensaje(null);
   };
 
-  // --- Funciones de Actualizacion (no cambian) ---
-  // (Operan sobre el estado de React (desempaquetado) y 
-  // luego llaman a _guardarActualizacion, que si empaqueta)
-
+  // --- Funciones de Actualizacion ---
   const actualizarDatos = (nuevosDatos, passwordActual) => {
-    if (!validarPassword(passwordActual)) {
-      return false;
-    }
+    if (!validarPassword(passwordActual)) return false;
     const usuarioActualizado = { ...usuario, ...nuevosDatos };
     _guardarActualizacion(usuarioActualizado);
     return true;
   };
 
   const actualizarPassword = (passwordActual, passwordNueva) => {
-    if (!validarPassword(passwordActual)) {
-      return false;
-    }
+    if (!validarPassword(passwordActual)) return false;
     const usuarioActualizado = { ...usuario, password: passwordNueva };
     _guardarActualizacion(usuarioActualizado);
     return true;
   };
 
   const actualizarFoto = async (archivoFoto, passwordActual) => {
-    if (!validarPassword(passwordActual)) {
-      return false;
-    }
+    if (!validarPassword(passwordActual)) return false;
 
     try {
       const fotoBase64 = await convertirBase64(archivoFoto);
@@ -237,7 +225,6 @@ export default function ProveedorAutenticacion({ children }) {
       return false;
     }
   };
-
 
   return (
     <ContextoAutenticacion.Provider
@@ -258,3 +245,10 @@ export default function ProveedorAutenticacion({ children }) {
     </ContextoAutenticacion.Provider>
   );
 }
+
+// Hook para consumir el contexto desde otros componentes
+export const useAutenticacion = () => {
+  const ctx = useContext(ContextoAutenticacion);
+  if (!ctx) throw new Error('useAutenticacion debe usarse dentro de ProveedorAutenticacion');
+  return ctx;
+};
