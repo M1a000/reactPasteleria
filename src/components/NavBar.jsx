@@ -1,141 +1,74 @@
-import { useContext } from 'react';
-// 1. Ya no necesitamos 'useNavigate' ni 'Button' aqui
-import { NavLink } from 'react-router-dom';
-import { Navbar, Nav, Container, Image } from 'react-bootstrap';
-// Importamos ambos contextos
-import { ContextoAutenticacion } from '../context/ContextoAutenticacion';
-import { PasteleriaContext } from '../context/PasteleriaContext';
+import React from "react";
+import { NavLink, Link } from "react-router-dom";
+import { Navbar, Container, Nav, Button, Image } from "react-bootstrap";
+import { useAutenticacion } from "../context/ContextoAutenticacion";
 
 export default function NavBar() {
-  // 2. Ya no necesitamos 'cerrarSesion' aqui
-  const { usuario } = useContext(ContextoAutenticacion);
-  const { total } = useContext(PasteleriaContext);
+  const { usuario, cerrarSesion } = useAutenticacion();
 
-  // 3. Funcion para estilos activos/inactivos (usando la clase CSS)
-  const activeClassName = ({ isActive }) => (
-    isActive ? 'nav-link-custom active' : 'nav-link-custom' 
-  );
-  
   return (
-    <Navbar 
-      expand="lg" 
-      style={{ backgroundColor: '#8B4513' }} 
-      variant="dark" 
-      sticky="top"
-      className="shadow-sm"
-    >
+    <Navbar expand="lg" variant="dark" style={{ backgroundColor: "#7A3B16" }} className="shadow-sm">
       <Container>
-        <Navbar.Brand as={NavLink} to="/" style={{ fontFamily: 'Pacifico, cursive', fontSize: '1.5rem' }}>
+        <Navbar.Brand
+          as={Link}
+          to="/"
+          className="fw-bold text-white"
+          style={{ fontFamily: "Pacifico, cursive" }}
+        >
           Pasteleria Mil Sabores
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
-          
-          <Nav className="me-auto w-100 align-items-lg-center">
-            
-            {/* --- LINKS DE LA IZQUIERDA --- */}
-            <Nav.Link 
-              as={NavLink} 
-              to="/" 
-              className={activeClassName} 
-              end
-            >
+
+        <Navbar.Toggle aria-controls="main-nav" />
+        <Navbar.Collapse id="main-nav">
+          <Nav className="me-auto">
+            <Nav.Link as={NavLink} to="/" end className="text-light">
               Home
             </Nav.Link>
-            <Nav.Link 
-              as={NavLink} 
-              to="/catalogo" 
-              className={activeClassName}
-            >
-              Catalogo
-            </Nav.Link>
-            <Nav.Link 
-              as={NavLink} 
-              to="/sobre-nosotros" 
-              className={activeClassName}
-            >
-              Sobre Nosotros
-            </Nav.Link>
-            <Nav.Link 
-              as={NavLink} 
-              to="/contacto" 
-              className={activeClassName}
-            >
-              Contacto
-            </Nav.Link>
-            
-            {/* --- LINK DE ADMIN (CONDICIONAL) --- */}
-            {usuario && usuario.rol === 'ADMIN' && (
-              <Nav.Link 
-                as={NavLink} 
-                to="/admin" // Ruta base del panel de admin
-                className={activeClassName}
-              >
-                Panel Admin
-              </Nav.Link>
-            )}
+            <Nav.Link as={NavLink} to="/catalogo" className="text-light">Catalogo</Nav.Link>
+            <Nav.Link as={NavLink} to="/sobre-nosotros" className="text-light">Sobre Nosotros</Nav.Link>
+            <Nav.Link as={NavLink} to="/contacto" className="text-light">Contacto</Nav.Link>
+          </Nav>
 
-            
-            {/* --- LINKS DE LA DERECHA --- */}
+          <Nav className="ms-auto align-items-center">
+            <Nav.Link as={NavLink} to="/carrito" className="text-light">
+              <span role="img" aria-label="carrito">🛒</span> Carrito
+            </Nav.Link>
+
             {usuario ? (
-              // --- VISTA LOGUEADO ---
-              // Usamos d-flex para alinear horizontalmente en desktop
-              // ms-lg-auto empuja todo este grupo a la derecha en desktop
-              <div className="d-lg-flex align-items-center ms-lg-auto mt-2 mt-lg-0">
-                <Nav.Link 
-                  as={NavLink} 
-                  to="/carrito" 
-                  className={activeClassName}
-                >
-                  🛒 Carrito (${total.toLocaleString('es-CL')})
-                </Nav.Link>
-                
-                {/* 4. BOTON "CERRAR SESION" YA NO ESTA AQUI */}
+              <>
+                {usuario.rol === "admin" && (
+                  <Nav.Link as={NavLink} to="/admin" className="fw-bold ms-2 text-light">
+                    Panel Admin
+                  </Nav.Link>
+                )}
 
-                {/* 5. Link de Perfil */}
-                <Nav.Link 
-                  as={NavLink} 
-                  to="/mi-perfil" 
-                  // Margen a la izquierda en desktop
-                  className={`${activeClassName} d-flex flex-column align-items-center mt-2 mt-lg-0 ms-lg-2`}
-                  title="Ir a Mi Perfil" 
-                >
-                  <Image
-                    src={usuario.fotoPerfil || 'https://placehold.co/30x30/FFF5E1/5D4037?text=Perfil'}
-                    roundedCircle
-                    style={{ width: '30px', height: '30px', objectFit: 'cover' }}
-                    className="mb-1"
-                  />
-                  {/* 6. Nombre con color blanco forzado */}
-                  <span className="text-white" style={{ fontSize: '0.75rem' }}>{usuario.nombre}</span>
+                <Nav.Link as={NavLink} to="/mi-perfil" className="d-flex align-items-center ms-3 text-light">
+                  {usuario.fotoPerfil ? (
+                    <Image
+                      src={usuario.fotoPerfil}
+                      roundedCircle
+                      style={{ width: 32, height: 32, objectFit: "cover", marginRight: 8 }}
+                    />
+                  ) : (
+                    <span
+                      className="rounded-circle bg-secondary text-white d-inline-flex justify-content-center align-items-center"
+                      style={{ width: 32, height: 32, marginRight: 8 }}
+                    >
+                      {usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : "P"}
+                    </span>
+                  )}
+                  <span className="d-none d-lg-inline text-light">{usuario.nombre || "Perfil"}</span>
                 </Nav.Link>
-              </div>
+
+                <Button variant="outline-light" size="sm" onClick={cerrarSesion} className="ms-2">
+                  Cerrar
+                </Button>
+              </>
             ) : (
-              // --- VISTA NO LOGUEADO ---
-              // Usamos ms-lg-auto para empujar este grupo a la derecha en desktop
-              <div className="d-lg-flex align-items-center ms-lg-auto mt-2 mt-lg-0">
-                <Nav.Link 
-                  as={NavLink} 
-                  to="/carrito" 
-                  className={activeClassName}
-                >
-                  🛒 Carrito (${total.toLocaleString('es-CL')})
-                </Nav.Link>
-                <Nav.Link 
-                  as={NavLink} 
-                  to="/login" 
-                  className={activeClassName}
-                >
-                  Iniciar Sesion
-                </Nav.Link>
-                <Nav.Link 
-                  as={NavLink} 
-                  to="/registro" 
-                  className={activeClassName}
-                >
-                  Registrate
-                </Nav.Link>
-              </div>
+              <>
+                <Nav.Link as={NavLink} to="/registro" className="ms-2 text-light">Registro</Nav.Link>
+                <Nav.Link as={NavLink} to="/login" className="ms-2 text-light">Ingresar</Nav.Link>
+              </>
             )}
           </Nav>
         </Navbar.Collapse>

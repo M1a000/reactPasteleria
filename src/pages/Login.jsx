@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ContextoAutenticacion } from "../context/ContextoAutenticacion";
+import { useAutenticacion } from "../context/ContextoAutenticacion";
 import { Container, Form, Button, Alert, Row, Col } from "react-bootstrap";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { iniciarSesion, mensaje, limpiarMensaje } = useContext(ContextoAutenticacion);
+  const { iniciarSesion, mensaje, limpiarMensaje } = useAutenticacion();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [alertLocal, setAlertLocal] = useState(null);
 
   useEffect(() => {
-    // Limpia el mensaje de error cuando el componente se desmonta
     return () => limpiarMensaje();
   }, [limpiarMensaje]);
 
@@ -26,24 +25,24 @@ export default function Login() {
       return;
     }
 
-    const ok = iniciarSesion(mail, pass);
-    if (ok) {
-      // leer el usuario guardado (el contexto guarda en localStorage)
-      const saved = JSON.parse(localStorage.getItem("usuarioLogueado") || "null");
-      const rol = saved?.rol ?? "cliente";
+    const resultado = iniciarSesion(mail, pass); // devuelve objeto o null
+    console.log("[Login] iniciarSesion resultado:", resultado);
 
+    if (resultado) {
       setAlertLocal({ variant: "success", text: "Inicio de sesión correcto." });
 
-      // redirigir según rol
-      if (rol === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/");
+      // forzar navegación al panel admin si tiene rol admin
+      if (resultado.rol === "admin") {
+        console.log("[Login] redirigiendo a /admin");
+        navigate("/admin", { replace: true });
+        return;
       }
+
+      console.log("[Login] redirigiendo a / (cliente)");
+      navigate("/", { replace: true });
       return;
     }
 
-    // iniciarSesion establece mensaje en el contexto; mostrarlo localmente si existe
     if (mensaje) {
       setAlertLocal({ variant: "danger", text: mensaje });
     } else {
@@ -59,10 +58,7 @@ export default function Login() {
             Iniciar Sesión
           </h2>
 
-          {/* 9. Mostramos el mensaje de ÉXITO (local) */}
           {alertLocal && <Alert variant={alertLocal.variant}>{alertLocal.text}</Alert>}
-
-          {/* 10. Mostramos el mensaje de ERROR (del Contexto) */}
           {mensaje && !alertLocal && <Alert variant="danger">{mensaje}</Alert>}
 
           <Form onSubmit={handleSubmit} className="p-4 bg-light rounded shadow-sm">
@@ -97,4 +93,3 @@ export default function Login() {
     </Container>
   );
 }
-

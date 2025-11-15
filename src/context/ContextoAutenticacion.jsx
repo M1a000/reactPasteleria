@@ -186,37 +186,37 @@ export default function ProveedorAutenticacion({ children }) {
   };
 
   const iniciarSesion = (email, password) => {
-    setMensaje(null);
+  setMensaje(null);
 
-    const usuarioEncontrado = usuariosRegistrados.find(
-      (u) => u.email === email && u.password === password
-    );
+  const usuarioEncontrado = usuariosRegistrados.find(
+    (u) => u.email === email && u.password === password
+  );
 
-    if (usuarioEncontrado) {
-      const usuarioConRol = { ...usuarioEncontrado };
+  if (usuarioEncontrado) {
+    const usuarioConRol = { ...usuarioEncontrado };
 
-      const datosSeguros = _empaquetarDatos(usuarioConRol);
-      const usuarioParaGuardar = {
-        nombre: usuarioConRol.nombre,
-        email: usuarioConRol.email,
-        fotoPerfil: usuarioConRol.fotoPerfil,
-        rol: usuarioConRol.rol,
-        datosSeguros: datosSeguros
-      };
+    const datosSeguros = _empaquetarDatos(usuarioConRol);
+    const usuarioParaGuardar = {
+      nombre: usuarioConRol.nombre,
+      email: usuarioConRol.email,
+      fotoPerfil: usuarioConRol.fotoPerfil,
+      rol: usuarioConRol.rol,
+      datosSeguros: datosSeguros
+    };
 
-      setUsuario(usuarioConRol);
-      localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
+    setUsuario(usuarioConRol);
+    localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
 
-      // Mensaje de éxito y limpieza automática
-      setMensaje('Sesión iniciada correctamente.');
-      setTimeout(() => setMensaje(null), 2000);
+    setMensaje('Sesión iniciada correctamente.');
+    setTimeout(() => setMensaje(null), 2000);
 
-      return true;
-    }
+    // Devuelve el objeto guardado para que el llamador pueda redirigir con certeza
+    return usuarioParaGuardar;
+  }
 
-    setMensaje('Error: Email o contraseña incorrectos.');
-    return false;
-  };
+  setMensaje('Error: Email o contraseña incorrectos.');
+  return null;
+};
 
   const cerrarSesion = () => {
     setUsuario(null);

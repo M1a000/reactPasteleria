@@ -21,7 +21,7 @@ import ConfirmacionPedido from './pages/ConfirmacionPedido';
 
 // --- ¡NUEVAS IMPORTACIONES! ---
 // 3. Importamos el dashboard y la ruta protegida
-import AdminDashboard from './pages/AdminDashboard';
+import AdminPanel from './pages/AdminPanel';
 import RutaProtegidaAdmin from './components/RutaProtegidaAdmin';
 // ------------------------------
 
@@ -51,10 +51,10 @@ function App() {
 
           {/* --- ¡NUEVA RUTA DE ADMIN! --- */}
           <Route 
-            path="/admin" 
+            path="/admin/*" 
             element={
               <RutaProtegidaAdmin>
-                <AdminDashboard />
+                <AdminPanel />
               </RutaProtegidaAdmin>
             } 
           />
