@@ -1,286 +1,175 @@
-// ...existing code...
-import { createContext, useState, useContext, useEffect } from 'react';
+// src/context/ContextoAutenticacion.jsx
 
-export const ContextoAutenticacion = createContext(null);
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
-// --- Helpers ---
-const _empaquetarDatos = (datos) => {
-  const { password, fechaNacimiento, telefono, codigoPromo } = datos;
-  const datosSensibles = { password, fechaNacimiento, telefono, codigoPromo };
-  return btoa(JSON.stringify(datosSensibles));
+// ⚠️ Configura aquí la URL base de tu API de Spring Boot
+const API_BASE_URL = 'http://localhost:8080/api'; 
+
+// 1. Crear el Contexto
+const AuthContext = createContext();
+
+// Hook personalizado para usar la autenticación
+export const useAutenticacion = () => {
+    return useContext(AuthContext);
 };
 
-const _desempaquetarDatos = (datosBase64) => {
-  if (!datosBase64) return {};
-  try {
-    return JSON.parse(atob(datosBase64));
-  } catch {
-    return {};
-  }
+// ----------------------------------------------------------------------
+// --- FUNCIÓN CENTRAL: CUSTOM FETCH API (Reemplaza a Axios) ---
+// ----------------------------------------------------------------------
+// Esta función gestiona las llamadas HTTP, inyectando el token JWT si está disponible.
+export const fetchApi = async (endpoint, options = {}) => {
+    
+    // Obtener el usuario/token del almacenamiento local
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const token = user ? user.token : null;
+    
+    // Configuración de encabezados por defecto
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    };
+
+    // 💡 Inyectar el Token JWT si existe y si la llamada NO es de autenticación
+    if (token && !endpoint.startsWith('/auth')) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const config = {
+        ...options,
+        headers: headers,
+        method: options.method || 'GET'
+    };
+
+    // Ejecutar Fetch
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+    // 🚨 Manejo Manual de Errores: Lanzar un error si el estado no es 2xx
+    if (!response.ok) {
+        let errorData;
+        try {
+            // Intenta parsear el cuerpo del error (ej. mensaje de error de Spring)
+            errorData = await response.json();
+        } catch (e) {
+            // Si el cuerpo no es JSON (ej. error 500 simple)
+            errorData = { message: response.statusText || 'Error desconocido del servidor.' };
+        }
+        // Lanza un objeto de error para que el try/catch del Login/Registro lo capture
+        throw { status: response.status, data: errorData };
+    }
+
+    // Si la respuesta es 204 No Content (DELETE), no intentes parsear JSON
+    if (response.status === 204) return null;
+    
+    // Parsear JSON manualmente y devolver los datos
+    return response.json();
 };
 
-const convertirBase64 = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-  });
-};
-
-// --- PREDEFINED ADMINS (solo estos pueden ser administradores) ---
-// Ajusta email/password según necesites. Estas cuentas se "seedearán" al iniciar la app
-const PREDEFINED_ADMINS = [
-  {
-    nombre: 'Administrador',
-    email: 'admin@pasteleria.cl',
-    password: 'admin1234',
-    fotoPerfil: null,
-    rol: 'admin'
-  }
-];
-// ---------------------------------------------------
-
-export default function ProveedorAutenticacion({ children }) {
-  const [usuario, setUsuario] = useState(() => {
-    const savedUserJSON = localStorage.getItem('usuarioLogueado');
-    if (!savedUserJSON) return null;
-
-    const usuarioGuardado = JSON.parse(savedUserJSON);
-    const datosSensibles = _desempaquetarDatos(usuarioGuardado.datosSeguros);
-    const { datosSeguros, ...rest } = usuarioGuardado;
-    return { ...rest, ...datosSensibles };
-  });
-
-  const [usuariosRegistrados, setUsuariosRegistrados] = useState(() => {
-    const savedUsersJSON = localStorage.getItem('usuariosRegistrados');
-    if (!savedUsersJSON) return [];
-    const listaGuardada = JSON.parse(savedUsersJSON);
-    return listaGuardada.map(u => {
-      const datosSensibles = _desempaquetarDatos(u.datosSeguros);
-      const { datosSeguros, ...rest } = u;
-      return { ...rest, ...datosSensibles };
-    });
-  });
-
-  const [mensaje, setMensaje] = useState(null);
-
-  // Seed predefined admins if they are not in localStorage
-  useEffect(() => {
-    const existAdminEmails = new Set(usuariosRegistrados.map(u => u.email));
-    const adminsToAdd = PREDEFINED_ADMINS.filter(a => !existAdminEmails.has(a.email));
-    if (adminsToAdd.length === 0) return;
-
-    const nuevos = [...usuariosRegistrados, ...adminsToAdd];
-    // Guardar en formato protegido (datosSeguros)
-    const listaParaGuardar = nuevos.map(u => {
-      const datosSeguros = _empaquetarDatos(u);
-      return {
-        nombre: u.nombre,
-        email: u.email,
-        fotoPerfil: u.fotoPerfil,
-        rol: u.rol,
-        datosSeguros
-      };
+// ----------------------------------------------------------------------
+// 2. Componente Proveedor (Provider)
+// ----------------------------------------------------------------------
+export const ProveedorAutenticacion = ({ children }) => {
+  
+    const [user, setUser] = useState(() => {
+        const storedUser = localStorage.getItem('user');
+        try {
+            // Inicializar el estado del usuario desde localStorage al cargar la app
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch (e) {
+            console.error("Error al recuperar usuario de localStorage", e);
+            return null;
+        }
     });
 
-    setUsuariosRegistrados(nuevos);
-    localStorage.setItem('usuariosRegistrados', JSON.stringify(listaParaGuardar));
-    // No forzamos login; solo agregamos las cuentas admin disponibles
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ejecutar solo al montar
+    const [mensaje, setMensaje] = useState(null);
 
-  // --- FUNCION INTERNA PARA GUARDAR CAMBIOS ---
-  const _guardarActualizacion = (usuarioActualizado) => {
-    const datosSeguros = _empaquetarDatos(usuarioActualizado);
+    const limpiarMensaje = useCallback(() => setMensaje(null), []);
 
-    const usuarioParaGuardar = {
-      nombre: usuarioActualizado.nombre,
-      email: usuarioActualizado.email,
-      fotoPerfil: usuarioActualizado.fotoPerfil,
-      rol: usuarioActualizado.rol,
-      datosSeguros: datosSeguros
+    // ----------------------------------------------------
+    // 🔑 FUNCIÓN LOGIN (Llama a /api/auth/login)
+    // ----------------------------------------------------
+    const iniciarSesion = async (email, password) => {
+        setMensaje(null);
+        try {
+            
+            // Llama a la API de login
+            const responseData = await fetchApi('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password }),
+            });
+            
+            // API devuelve: { token, id, nombreUsuario, email, rol }
+            const { token, nombreUsuario, rol, id } = responseData; 
+            
+            const newUser = { id, nombreUsuario, email, rol, token };
+            setUser(newUser);
+            localStorage.setItem('user', JSON.stringify(newUser));
+            
+            return newUser; 
+            
+        } catch (error) {
+            // Manejar errores (401, 400, etc.)
+            if (error.status === 401) {
+                setMensaje('Credenciales incorrectas.');
+            } else {
+                setMensaje(error.data?.message || 'Error de conexión con el servidor.');
+            }
+            return null; 
+        }
+    };
+    
+    // ----------------------------------------------------
+    // 📝 FUNCIÓN REGISTRO (Llama a /api/auth/register)
+    // ----------------------------------------------------
+    const registrarUsuario = async (datosRegistro) => {
+        setMensaje(null);
+        try {
+            
+            // Llama a la API de registro
+            await fetchApi('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(datosRegistro),
+            });
+            
+            // Si es exitoso, lanzamos un mensaje (el usuario debe ir a login)
+            setMensaje("Registro exitoso. Serás redirigido para iniciar sesión.");
+
+        } catch (error) {
+            // Manejar errores (ej. 400 por email ya en uso)
+            let errorTexto = 'Error desconocido al registrar.';
+            if (error.status === 400) {
+                 errorTexto = error.data?.message || 'El email ya se encuentra en uso.';
+            } else {
+                 errorTexto = 'Error de servidor. Intenta de nuevo más tarde.';
+            }
+            setMensaje(errorTexto);
+            
+            // Lanzar el error para que Registro.jsx pueda capturarlo y bloquear el formulario
+            throw error; 
+        }
     };
 
-    setUsuario(usuarioActualizado);
-    localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
-
-    const emailOriginal = usuario?.email ?? usuarioActualizado.email;
-    const listaActualizada = usuariosRegistrados.map(u =>
-      (u.email === emailOriginal) ? usuarioActualizado : u
-    );
-
-    const listaParaGuardar = listaActualizada.map(u => {
-      const datosSeguros = _empaquetarDatos(u);
-      return {
-        nombre: u.nombre,
-        email: u.email,
-        fotoPerfil: u.fotoPerfil,
-        rol: u.rol,
-        datosSeguros: datosSeguros
-      };
-    });
-
-    setUsuariosRegistrados(listaActualizada);
-    localStorage.setItem('usuariosRegistrados', JSON.stringify(listaParaGuardar));
-  };
-
-  // --- FUNCION INTERNA PARA VALIDAR PASSWORD ---
-  const validarPassword = (passwordActual) => {
-    if (!usuario) {
-      setMensaje('Error: No hay usuario logueado.');
-      return false;
-    }
-    if (usuario.password !== passwordActual) {
-      setMensaje('Error: La contraseña actual es incorrecta.');
-      return false;
-    }
-    setMensaje(null);
-    return true;
-  };
-
-  // --- Funciones de Autenticacion ---
-  const registrarUsuario = (datosUsuario) => {
-    setMensaje(null);
-
-    if (usuariosRegistrados.find(u => u.email === datosUsuario.email)) {
-      setMensaje('Error: El email ya está registrado.');
-      return false;
-    }
-
-    const nuevoUsuario = {
-      ...datosUsuario,
-      telefono: datosUsuario.telefono ?? '',
-      fotoPerfil: datosUsuario.fotoPerfil ?? null,
-      rol: 'cliente' // siempre cliente al registrarse
+    // Función de Logout
+    const cerrarSesion = () => {
+        setUser(null);
+        localStorage.removeItem('user');
     };
-
-    const nuevosUsuarios = [...usuariosRegistrados, nuevoUsuario];
-
-    const listaParaGuardar = nuevosUsuarios.map(u => {
-      const datosSeguros = _empaquetarDatos(u);
-      return {
-        nombre: u.nombre,
-        email: u.email,
-        fotoPerfil: u.fotoPerfil,
-        rol: u.rol,
-        datosSeguros
-      };
-    });
-
-    setUsuariosRegistrados(nuevosUsuarios);
-    setUsuario(nuevoUsuario);
-    localStorage.setItem('usuariosRegistrados', JSON.stringify(listaParaGuardar));
-
-    const datosSeguros = _empaquetarDatos(nuevoUsuario);
-    const usuarioParaGuardar = {
-      nombre: nuevoUsuario.nombre,
-      email: nuevoUsuario.email,
-      fotoPerfil: nuevoUsuario.fotoPerfil,
-      rol: nuevoUsuario.rol,
-      datosSeguros
-    };
-    localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
-
-    return true;
-  };
-
-  const iniciarSesion = (email, password) => {
-  setMensaje(null);
-
-  const usuarioEncontrado = usuariosRegistrados.find(
-    (u) => u.email === email && u.password === password
-  );
-
-  if (usuarioEncontrado) {
-    const usuarioConRol = { ...usuarioEncontrado };
-
-    const datosSeguros = _empaquetarDatos(usuarioConRol);
-    const usuarioParaGuardar = {
-      nombre: usuarioConRol.nombre,
-      email: usuarioConRol.email,
-      fotoPerfil: usuarioConRol.fotoPerfil,
-      rol: usuarioConRol.rol,
-      datosSeguros: datosSeguros
-    };
-
-    setUsuario(usuarioConRol);
-    localStorage.setItem('usuarioLogueado', JSON.stringify(usuarioParaGuardar));
-
-    setMensaje('Sesión iniciada correctamente.');
-    setTimeout(() => setMensaje(null), 2000);
-
-    // Devuelve el objeto guardado para que el llamador pueda redirigir con certeza
-    return usuarioParaGuardar;
-  }
-
-  setMensaje('Error: Email o contraseña incorrectos.');
-  return null;
-};
-
-  const cerrarSesion = () => {
-    setUsuario(null);
-    localStorage.removeItem('usuarioLogueado');
-    setMensaje(null);
-  };
-
-  const limpiarMensaje = () => {
-    setMensaje(null);
-  };
-
-  // --- Funciones de Actualizacion ---
-  const actualizarDatos = (nuevosDatos, passwordActual) => {
-    if (!validarPassword(passwordActual)) return false;
-    const usuarioActualizado = { ...usuario, ...nuevosDatos };
-    _guardarActualizacion(usuarioActualizado);
-    return true;
-  };
-
-  const actualizarPassword = (passwordActual, passwordNueva) => {
-    if (!validarPassword(passwordActual)) return false;
-    const usuarioActualizado = { ...usuario, password: passwordNueva };
-    _guardarActualizacion(usuarioActualizado);
-    return true;
-  };
-
-  const actualizarFoto = async (archivoFoto, passwordActual) => {
-    if (!validarPassword(passwordActual)) return false;
-
-    try {
-      const fotoBase64 = await convertirBase64(archivoFoto);
-      const usuarioActualizado = { ...usuario, fotoPerfil: fotoBase64 };
-      _guardarActualizacion(usuarioActualizado);
-      return true;
-    } catch (error) {
-      console.error("Error al convertir imagen a Base64:", error);
-      setMensaje("Error al procesar la imagen. Intenta con otra.");
-      return false;
-    }
-  };
-
-  return (
-    <ContextoAutenticacion.Provider
-      value={{
-        usuario,
-        usuariosRegistrados,
+    
+    // Objeto de valor del contexto
+    const value = useMemo(() => ({
+        user,
         mensaje,
-        registrarUsuario,
+        isLoggedIn: !!user,
+        // Helpers de rol
+        isAdmin: user && user.rol === 'ADMINISTRADOR',
+        isVendedor: user && user.rol === 'VENDEDOR',
+        isCliente: user && user.rol === 'CLIENTE', 
         iniciarSesion,
         cerrarSesion,
         limpiarMensaje,
-        actualizarDatos,
-        actualizarPassword,
-        actualizarFoto
-      }}
-    >
-      {children}
-    </ContextoAutenticacion.Provider>
-  );
-}
+        registrarUsuario,
+        fetchApi // 👈 Esencial para que otros componentes llamen a rutas protegidas
+    }), [user, mensaje, limpiarMensaje]);
 
-// Hook para consumir el contexto desde otros componentes
-export const useAutenticacion = () => {
-  const ctx = useContext(ContextoAutenticacion);
-  if (!ctx) throw new Error('useAutenticacion debe usarse dentro de ProveedorAutenticacion');
-  return ctx;
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

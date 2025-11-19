@@ -1,12 +1,24 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
-import { useAutenticacion } from "../context/ContextoAutenticacion";
+// components/RutaProtegidaAdmin.jsx
 
-export default function RutaProtegidaAdmin({ children }) {
-  const { usuario } = useAutenticacion();
+import React from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAutenticacion } from '../context/ContextoAutenticacion';
 
-  if (!usuario) return <Navigate to="/login" replace />;
-  if (usuario.rol !== "admin") return <Navigate to="/not-authorized" replace />;
+const RutaProtegidaAdmin = () => {
+  const { user, isLoggedIn, isAdmin } = useAutenticacion();
+  
+  if (!isLoggedIn) {
+    // Si no está logueado, lo envía a la página de login
+    return <Navigate to="/login" replace />;
+  }
+  
+  // 💡 CLAVE: Si está logueado pero NO es administrador, lo envía a otra página (ej: inicio o error 403)
+  if (!isAdmin) {
+    return <Navigate to="/" replace />; // O a una página de "Acceso Denegado"
+  }
 
-  return children;
-}
+  // Si es ADMINISTRADOR, renderiza el componente hijo
+  return <Outlet />;
+};
+
+export default RutaProtegidaAdmin;
