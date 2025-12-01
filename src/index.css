@@ -1,120 +1,105 @@
-/* --- ESTILOS GENERALES --- */
-* {
-  color: #5D4037; /* Texto Principal: Marron Oscuro */
-  font-family: 'Lato', sans-serif !important;
-}
+/* Importar fuentes desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Pacifico&display=swap');
 
+/* Reemplazo del selector universal para evitar conflictos con Bootstrap:
+   Aplicamos la fuente al body y quitamos la imposición del color en todos los elementos.
+*/
 body {
+  font-family: 'Lato', sans-serif;
   background-color: #FFF5E1; /* Crema Pastel */
+  color: #5D4037; /* Texto Principal: Marrón Oscuro (valor por defecto del body) */
 }
 
-h1, h2, h3, h4, h5, h6, .navbar-brand {
-  font-family: 'Pacifico', cursive !important;
+/* Global: caja y elementos responsivos */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+img, svg, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 2. Definimos los colores de los títulos (sin incluir .navbar-brand para evitar conflictos) */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Pacifico', cursive; /* permitir que la navbar pueda reaplicar color blanco */
   color: #5D4037;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
 }
 
+/* 3. Definimos una clase para el Texto Secundario (Gris Claro) */
 .text-secundario {
   color: #B0BEC5 !important;
 }
 
-/* --- ¡CAMBIO AQUI! ESTILOS DE BOTONES --- */
-
-/* 1. Boton Primario (Rosa Suave) */
+/* --- Colores de Botones (como antes) --- */
 .btn-primary {
   background-color: #FFC0CB; /* Rosa Suave */
-  border-color: #FFC0CB; /* Rosa Suave */
-  color: #5D4037 !important; /* Texto Marron Oscuro (para contraste) */
-}
-.btn-primary:hover {
-  background-color: #f7b5c3; /* Rosa Suave mas oscuro */
-  border-color: #f7b5c3;
-  color: #5D4037 !important;
-  opacity: 1; 
+  border-color: #FFC0CB;
+  color: #5D4037; /* Texto oscuro para que contraste */
 }
 
-/* 2. Boton Secundario (Chocolate) */
-.btn-secondary,
-.btn-success,
-.btn-danger {
-  background-color: #8B4513; /* Chocolate */
-  border-color: #8B4513; /* Chocolate */
-  color: white !important; /* Texto Blanco */
-}
-.btn-secondary:hover,
-.btn-success:hover,
-.btn-danger:hover {
-  background-color: #a0521f; /* Chocolate mas claro */
-  border-color: #a0521f;
-  color: white !important;
-  opacity: 1; 
+.btn-secondary {
+  background-color: #8B4000; /* Chocolate (un poco más oscuro) */
+  border-color: #8B4000;
+  color: #ffffff; /* Asegurar contraste (blanco) */
+  /* El color del texto (blanco) lo define Bootstrap por defecto, pero lo forzamos aquí */
 }
 
-/* 3. Botones Outline (Borde) */
-.btn-outline-primary {
-  color: #FFC0CB; /* Texto Rosa */
-  border-color: #FFC0CB; /* Borde Rosa */
-}
-.btn-outline-primary:hover {
+.btn-success {
   background-color: #FFC0CB;
   border-color: #FFC0CB;
-  color: #5D4037; /* Texto Marron */
+  color: #5D4037;
 }
 
-.btn-outline-secondary {
-  color: #8B4513; /* Texto Chocolate */
-  border-color: #8B4513; /* Borde Chocolate */
-}
-.btn-outline-secondary:hover {
-  background-color: #8B4513;
-  border-color: #8B4513;
-  color: white; /* Texto Blanco */
+.btn-danger {
+  background-color: #8B4000;
+  border-color: #8B4000;
+  color: #ffffff; /* Asegurar contraste (blanco) */
 }
 
-
-/* 5. Boton de Pagar PayPal (Lo dejamos con sus colores) */
-.btn-paypal {
-  background-color: #ffc439 !important;
-  border-color: #ffc439 !important;
-  color: #003087 !important;
+.btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-danger:hover {
+  opacity: 0.8;
 }
 
+/* Botones: transiciones y foco accesible */
+.btn-primary, .btn-secondary, .btn-success, .btn-danger {
+  transition: background-color .15s ease, opacity .15s ease, transform .08s ease, box-shadow .12s ease;
+}
+.btn-primary:focus, .btn-secondary:focus, .btn-success:focus, .btn-danger:focus {
+  outline: none;
+  box-shadow: 0 0 0 .2rem rgba(93,64,55,0.18); /* sutil anillo de foco */
+}
 
-/* --- ESTILOS DE NAVBAR LINKS --- */
-.navbar-nav .nav-link-custom {
+/* Mantener colores previos pero asegurar contraste en secundarios/alertas */
+.btn-secondary {
+  color: #ffffff;
+}
+.btn-danger {
+  color: #ffffff;
+}
+
+/* Navbar: mayor especificidad, fuente Pacifico para brand y color blanco dentro de la barra */
+.navbar .navbar-brand {
+  font-family: 'Pacifico', cursive;
   color: white !important;
-  opacity: 0.75; 
-  font-weight: normal;
-  text-decoration: none;
-  transition: opacity 0.2s ease, color 0.2s ease, text-decoration 0.2s ease;
+  font-size: 1.25rem;
 }
-.navbar-nav .nav-link-custom.active {
-  opacity: 1;
-  font-weight: bold;
-  text-decoration: underline;
-  color: white !important; 
-}
-.navbar-nav .nav-link-custom:hover,
-.navbar-nav .nav-link-custom.active:hover {
-  opacity: 1;
-  color: #FFC0CB !important; /* Rosa Suave */
-}
-.navbar-brand, .navbar-text {
+.navbar .navbar-nav .nav-link,
+.navbar .navbar-text {
   color: white !important;
 }
-.navbar-brand:hover {
-  color: #FFC0CB !important;
+.navbar .navbar-nav .nav-link:hover {
+  color: #FFC0CB !important; /* Rosa al pasar el mouse */
 }
 
-
-/* --- ESTILOS DE IMAGENES --- */
-.carousel-img-fixed-height {
-  height: 400px;
-  object-fit: cover;
-  width: 100%;
+/* Accesibilidad: estilos de foco para links y brand dentro de navbar */
+.navbar .navbar-nav .nav-link:focus,
+.navbar .navbar-brand:focus,
+.navbar .navbar-text:focus {
+  outline: 3px solid rgba(255,192,203,0.22);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
-.card-img-fixed-height {
-  height: 250px;
-  object-fit: cover;
-  width: 100%;
-}
