@@ -33,7 +33,7 @@ h1, h2, h3, h4, h5, h6 {
   color: #B0BEC5 !important;
 }
 
-/* --- Colores de Botones (como antes) --- */
+/* --- Colores de Botones (consolidado) --- */
 .btn-primary {
   background-color: #FFC0CB; /* Rosa Suave */
   border-color: #FFC0CB;
@@ -44,7 +44,6 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #8B4000; /* Chocolate (un poco más oscuro) */
   border-color: #8B4000;
   color: #ffffff; /* Asegurar contraste (blanco) */
-  /* El color del texto (blanco) lo define Bootstrap por defecto, pero lo forzamos aquí */
 }
 
 .btn-success {
@@ -59,25 +58,17 @@ h1, h2, h3, h4, h5, h6 {
   color: #ffffff; /* Asegurar contraste (blanco) */
 }
 
-.btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-danger:hover {
-  opacity: 0.8;
-}
-
-/* Botones: transiciones y foco accesible */
+/* Hover / Transiciones / Foco (unificado) */
 .btn-primary, .btn-secondary, .btn-success, .btn-danger {
   transition: background-color .15s ease, opacity .15s ease, transform .08s ease, box-shadow .12s ease;
 }
+.btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-danger:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
 .btn-primary:focus, .btn-secondary:focus, .btn-success:focus, .btn-danger:focus {
   outline: none;
-  box-shadow: 0 0 0 .2rem rgba(93,64,55,0.18); /* sutil anillo de foco */
-}
-
-/* Mantener colores previos pero asegurar contraste en secundarios/alertas */
-.btn-secondary {
-  color: #ffffff;
-}
-.btn-danger {
-  color: #ffffff;
+  box-shadow: 0 0 0 .2rem rgba(93,64,55,0.18); /* anillo de foco coherente */
 }
 
 /* Navbar: mayor especificidad, fuente Pacifico para brand y color blanco dentro de la barra */

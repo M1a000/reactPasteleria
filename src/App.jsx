@@ -27,44 +27,42 @@ import RutaProtegidaAdmin from './components/RutaProtegidaAdmin';
 
 function App() {
   return (
-    <div className="d-flex flex-column min-vh-100">
+    <>
       <NavBar />
 
-      <main className="flex-grow-1">
-        <Routes>
-          {/* --- Rutas Públicas --- */}
-          <Route path="/" element={<Home />} />
-          <Route path="/catalogo" element={<Catalogo />} />
-          <Route path="/producto/:id" element={<DetalleProducto />} />
-          <Route path="/carrito" element={<Carrito />} />
-          <Route path="/registro" element={<Registro />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/sobre-nosotros" element={<SobreNosotros />} />
-          <Route path="/contacto" element={<Contacto />} />
-          
-          {/* --- Rutas de Usuario Logueado (Idealmente tambien protegidas) --- */}
-          {/* (Por ahora las dejamos asi, pero podrias crear una 'RutaProtegidaCliente') */}
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/mi-perfil" element={<MiPerfil />} />
-          <Route path="/pago-paypal" element={<PagoPaypal />} />
-          <Route path="/confirmacion-pedido" element={<ConfirmacionPedido />} />
+      <Routes>
+        {/* --- Rutas Públicas --- */}
+        <Route path="/" element={<Home />} />
+        <Route path="/catalogo" element={<Catalogo />} />
+        <Route path="/producto/:id" element={<DetalleProducto />} />
+        <Route path="/carrito" element={<Carrito />} />
+        <Route path="/registro" element={<Registro />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/sobre-nosotros" element={<SobreNosotros />} />
+        <Route path="/contacto" element={<Contacto />} />
+        
+        {/* --- Rutas de Usuario Logueado (Idealmente tambien protegidas) --- */}
+        {/* (Por ahora las dejamos asi, pero podrias crear una 'RutaProtegidaCliente') */}
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/mi-perfil" element={<MiPerfil />} />
+        <Route path="/pago-paypal" element={<PagoPaypal />} />
+        <Route path="/confirmacion-pedido" element={<ConfirmacionPedido />} />
 
-          {/* --- ¡NUEVA RUTA DE ADMIN! --- */}
-          <Route 
-            path="/admin/*" 
-            element={
-              <RutaProtegidaAdmin>
-                <AdminPanel />
-              </RutaProtegidaAdmin>
-            } 
-          />
-          {/* ------------------------------ */}
+        {/* --- ¡NUEVA RUTA DE ADMIN! --- */}
+        <Route 
+          path="/admin/*" 
+          element={
+            <RutaProtegidaAdmin>
+              <AdminPanel />
+            </RutaProtegidaAdmin>
+          } 
+        />
+        {/* ------------------------------ */}
 
-        </Routes>
-      </main>
+      </Routes>
 
       <Footer />
-    </div>
+    </>
   );
 }
 

@@ -5,171 +5,221 @@ import React, { createContext, useContext, useState, useCallback, useMemo } from
 // ⚠️ Configura aquí la URL base de tu API de Spring Boot
 const API_BASE_URL = 'http://localhost:8080/api'; 
 
+// Detectar modo mock desde env: por defecto activado (para desarrollo local).
+// Para usar backend real define en .env: VITE_USE_MOCK=false
+const useMock = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_USE_MOCK === 'false') ? false : true;
+
+// Utilidades mock para simular respuestas (usa localStorage)
+async function mockDelay(result, ms = 300) {
+  return new Promise(resolve => setTimeout(() => resolve(result), ms));
+}
+function getMockUsers() {
+  return JSON.parse(localStorage.getItem('mockUsers') || '[]');
+}
+function setMockUsers(users) {
+  localStorage.setItem('mockUsers', JSON.stringify(users));
+}
+async function mockFetch(path, options = {}) {
+  // Rutas soportadas: /api/auth/login y /api/auth/register
+  if (path.endsWith('/api/auth/login')) {
+    const body = options.body ? JSON.parse(options.body) : {};
+    const users = getMockUsers();
+    const user = users.find(u => u.email === body.email && u.password === body.password);
+    if (user) {
+      const role = user.role || (user.email === 'admin@pasteleria.test' ? 'admin' : 'cliente');
+      return mockDelay({
+        ok: true,
+        status: 200,
+        data: { usuario: { email: user.email, id: user.id, role }, token: 'mock-token' }
+      });
+    }
+    return mockDelay({ ok: false, status: 401, message: 'Credenciales inválidas (mock)' });
+  }
+
+  if (path.endsWith('/api/auth/register')) {
+    const body = options.body ? JSON.parse(options.body) : {};
+    const users = getMockUsers();
+    if (users.find(u => u.email === body.email)) {
+      return mockDelay({ ok: false, status: 409, message: 'Usuario ya existe (mock)' });
+    }
+    // Aceptar role opcional en el payload; por defecto 'cliente'
+    const newUser = { ...body, id: Date.now(), role: body.role || 'cliente' };
+    users.push(newUser);
+    setMockUsers(users);
+    return mockDelay({ ok: true, status: 201, data: { usuario: { email: body.email, id: newUser.id, role: newUser.role } } });
+  }
+
+  // Resto de rutas: simular 404
+  return mockDelay({ ok: false, status: 404, message: 'Not found (mock)' });
+}
+
+/* fetchApi robusto: usa mockFetch cuando useMock=true, si no hace fetch real */
+async function fetchApi(path, options = {}) {
+  const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+  if (useMock) {
+    // evitar cualquier fetch real en modo mock
+    return mockFetch(`${BASE}${path}`, options);
+  }
+
+  try {
+    const res = await fetch(`${BASE}${path}`, options);
+    const text = await res.text().catch(() => '');
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    // Si falla la petición real (network), usamos el mock como fallback
+    // Esto evita dejar la UI sin respuesta y reduce ruido de errores manejables.
+    console.warn('fetchApi: network error, usando mock como fallback:', err?.message);
+    return mockFetch(`${BASE}${path}`, options);
+  }
+}
+
+// Valor por defecto seguro para evitar destructuring sobre undefined
+const defaultAuth = {
+  usuario: null,
+  login: () => {},
+  logout: () => {},
+  iniciarSesion: async () => ({ ok: false, message: 'No auth' }),
+  registrarUsuario: async () => ({ ok: false, message: 'No auth' })
+};
+
 // 1. Crear el Contexto
-const AuthContext = createContext();
+export const ContextoAutenticacion = createContext(defaultAuth);
 
-// Hook personalizado para usar la autenticación
-export const useAutenticacion = () => {
-    return useContext(AuthContext);
-};
+// Hook consumidor exportado
+export function useAutenticacion() {
+  // Si no hay Provider, useContext devolverá el defaultAuth
+  return useContext(ContextoAutenticacion) || defaultAuth;
+}
 
-// ----------------------------------------------------------------------
-// --- FUNCIÓN CENTRAL: CUSTOM FETCH API (Reemplaza a Axios) ---
-// ----------------------------------------------------------------------
-// Esta función gestiona las llamadas HTTP, inyectando el token JWT si está disponible.
-export const fetchApi = async (endpoint, options = {}) => {
-    
-    // Obtener el usuario/token del almacenamiento local
-    const storedUser = localStorage.getItem('user');
-    const user = storedUser ? JSON.parse(storedUser) : null;
-    const token = user ? user.token : null;
-    
-    // Configuración de encabezados por defecto
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers,
-    };
+export function ContextoAutenticacionProvider({ children }) {
+  const [usuario, setUsuario] = useState(null);
+  const [mensaje, setMensaje] = useState(null);
 
-    // 💡 Inyectar el Token JWT si existe y si la llamada NO es de autenticación
-    if (token && !endpoint.startsWith('/auth')) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
+  const login = (u) => setUsuario(u);
+  const logout = () => setUsuario(null);
 
-    const config = {
-        ...options,
-        headers: headers,
-        method: options.method || 'GET'
-    };
+  const limpiarMensaje = useCallback(() => setMensaje(null), []);
 
-    // Ejecutar Fetch
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  // ----------------------------------------------------
+  // 🔑 FUNCIÓN LOGIN (Llama a /api/auth/login)
+  // ----------------------------------------------------
+  const iniciarSesion = async (email, password) => {
+      setMensaje(null);
+      try {
+          
+          // Llama a la API de login
+          const res = await fetchApi('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password })
+          });
 
-    // 🚨 Manejo Manual de Errores: Lanzar un error si el estado no es 2xx
-    if (!response.ok) {
-        let errorData;
-        try {
-            // Intenta parsear el cuerpo del error (ej. mensaje de error de Spring)
-            errorData = await response.json();
-        } catch (e) {
-            // Si el cuerpo no es JSON (ej. error 500 simple)
-            errorData = { message: response.statusText || 'Error desconocido del servidor.' };
-        }
-        // Lanza un objeto de error para que el try/catch del Login/Registro lo capture
-        throw { status: response.status, data: errorData };
-    }
+          if (!res.ok) {
+            if (res.error === 'NETWORK') {
+              // Fallback: comprobar users mock en localStorage
+              const users = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+              const user = users.find(u => u.email === email && u.password === password);
+              if (user) {
+                setUsuario({ email: user.email, id: user.id, mock: true });
+                return { ok: true, data: { usuario: { email: user.email, id: user.id }, token: 'mock-token' }, mock: true };
+              }
+              return { ok: false, status: 401, message: 'Credenciales inválidas (mock)' };
+            }
+            return res;
+          }
 
-    // Si la respuesta es 204 No Content (DELETE), no intentes parsear JSON
-    if (response.status === 204) return null;
-    
-    // Parsear JSON manualmente y devolver los datos
-    return response.json();
-};
-
-// ----------------------------------------------------------------------
-// 2. Componente Proveedor (Provider)
-// ----------------------------------------------------------------------
-export const ProveedorAutenticacion = ({ children }) => {
+          // backend respondió ok
+          const usuarioData = res.data?.usuario || null;
+          if (usuarioData) setUsuario(usuarioData);
+          return res;
+          
+      } catch (error) {
+          // Manejar errores (401, 400, etc.)
+          if (error.status === 401) {
+              setMensaje('Credenciales incorrectas.');
+          } else {
+              setMensaje(error.data?.message || 'Error de conexión con el servidor.');
+          }
+          return null; 
+      }
+  };
   
-    const [user, setUser] = useState(() => {
-        const storedUser = localStorage.getItem('user');
-        try {
-            // Inicializar el estado del usuario desde localStorage al cargar la app
-            return storedUser ? JSON.parse(storedUser) : null;
-        } catch (e) {
-            console.error("Error al recuperar usuario de localStorage", e);
-            return null;
-        }
-    });
+  // ----------------------------------------------------
+  // 📝 FUNCIÓN REGISTRO (Llama a /api/auth/register)
+  // ----------------------------------------------------
+  const registrarUsuario = async (datosRegistro) => {
+      setMensaje(null);
+      try {
+          
+          // Llama a la API de registro
+          const res = await fetchApi('/api/auth/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(datosRegistro)
+          });
 
-    const [mensaje, setMensaje] = useState(null);
-
-    const limpiarMensaje = useCallback(() => setMensaje(null), []);
-
-    // ----------------------------------------------------
-    // 🔑 FUNCIÓN LOGIN (Llama a /api/auth/login)
-    // ----------------------------------------------------
-    const iniciarSesion = async (email, password) => {
-        setMensaje(null);
-        try {
-            
-            // Llama a la API de login
-            const responseData = await fetchApi('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ email, password }),
-            });
-            
-            // API devuelve: { token, id, nombreUsuario, email, rol }
-            const { token, nombreUsuario, rol, id } = responseData; 
-            
-            const newUser = { id, nombreUsuario, email, rol, token };
-            setUser(newUser);
-            localStorage.setItem('user', JSON.stringify(newUser));
-            
-            return newUser; 
-            
-        } catch (error) {
-            // Manejar errores (401, 400, etc.)
-            if (error.status === 401) {
-                setMensaje('Credenciales incorrectas.');
-            } else {
-                setMensaje(error.data?.message || 'Error de conexión con el servidor.');
+          if (!res.ok) {
+            if (res.error === 'NETWORK') {
+              // Fallback: almacenar user en localStorage (solo desarrollo)
+              const users = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+              if (users.find(u => u.email === datosRegistro.email)) {
+                return { ok: false, status: 409, message: 'Usuario ya existe (mock)' };
+              }
+              const newUser = { ...datosRegistro, id: Date.now() };
+              users.push(newUser);
+              localStorage.setItem('mockUsers', JSON.stringify(users));
+              return { ok: true, status: 201, data: { usuario: { email: datosRegistro.email, id: newUser.id } }, mock: true };
             }
-            return null; 
-        }
-    };
-    
-    // ----------------------------------------------------
-    // 📝 FUNCIÓN REGISTRO (Llama a /api/auth/register)
-    // ----------------------------------------------------
-    const registrarUsuario = async (datosRegistro) => {
-        setMensaje(null);
-        try {
-            
-            // Llama a la API de registro
-            await fetchApi('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify(datosRegistro),
-            });
-            
-            // Si es exitoso, lanzamos un mensaje (el usuario debe ir a login)
-            setMensaje("Registro exitoso. Serás redirigido para iniciar sesión.");
+            return res;
+          }
 
-        } catch (error) {
-            // Manejar errores (ej. 400 por email ya en uso)
-            let errorTexto = 'Error desconocido al registrar.';
-            if (error.status === 400) {
-                 errorTexto = error.data?.message || 'El email ya se encuentra en uso.';
-            } else {
-                 errorTexto = 'Error de servidor. Intenta de nuevo más tarde.';
-            }
-            setMensaje(errorTexto);
-            
-            // Lanzar el error para que Registro.jsx pueda capturarlo y bloquear el formulario
-            throw error; 
-        }
-    };
+          return res;
+          
+      } catch (error) {
+          // Manejar errores (ej. 400 por email ya en uso)
+          let errorTexto = 'Error desconocido al registrar.';
+          if (error.status === 400) {
+               errorTexto = error.data?.message || 'El email ya se encuentra en uso.';
+          } else {
+               errorTexto = 'Error de servidor. Intenta de nuevo más tarde.';
+          }
+          setMensaje(errorTexto);
+          
+          // Lanzar el error para que Registro.jsx pueda capturarlo y bloquear el formulario
+          throw error; 
+      }
+  };
 
-    // Función de Logout
-    const cerrarSesion = () => {
-        setUser(null);
-        localStorage.removeItem('user');
-    };
-    
-    // Objeto de valor del contexto
-    const value = useMemo(() => ({
-        user,
-        mensaje,
-        isLoggedIn: !!user,
-        // Helpers de rol
-        isAdmin: user && user.rol === 'ADMINISTRADOR',
-        isVendedor: user && user.rol === 'VENDEDOR',
-        isCliente: user && user.rol === 'CLIENTE', 
-        iniciarSesion,
-        cerrarSesion,
-        limpiarMensaje,
-        registrarUsuario,
-        fetchApi // 👈 Esencial para que otros componentes llamen a rutas protegidas
-    }), [user, mensaje, limpiarMensaje]);
+  // Función de Logout
+  const cerrarSesion = () => {
+      setUsuario(null);
+      localStorage.removeItem('user');
+  };
+  
+  // Objeto de valor del contexto
+  const value = useMemo(() => ({
+      usuario,
+      mensaje,
+      isLoggedIn: !!usuario,
+      // Helpers de rol
+      isAdmin: usuario && usuario.rol === 'ADMINISTRADOR',
+      isVendedor: usuario && usuario.rol === 'VENDEDOR',
+      isCliente: usuario && usuario.rol === 'CLIENTE', 
+      iniciarSesion,
+      cerrarSesion,
+      limpiarMensaje,
+      registrarUsuario,
+      fetchApi // 👈 Esencial para que otros componentes llamen a rutas protegidas
+  }), [usuario, mensaje, limpiarMensaje]);
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+  return (
+    <ContextoAutenticacion.Provider value={value}>
+      {children}
+    </ContextoAutenticacion.Provider>
+  );
+}
+
+// También export por defecto para compatibilidad si algún sitio importa default
+export default ContextoAutenticacion;
